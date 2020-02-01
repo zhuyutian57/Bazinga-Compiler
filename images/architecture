@@ -1,0 +1,23 @@
+digraph architecture {
+	node [shape=ellipse]
+	"Source Codes"
+	node [shape=box]
+	"Symbol Table"
+	Lexer
+	Parser
+	"Semantic Analyzer"
+	"Intermediate Code Generator"
+	"Back End"
+	"Source Codes" -> Lexer
+	Lexer -> Parser [label="Token Stream"]
+	Parser -> "Semantic Analyzer" [label="Syntax Tree"]
+	"Semantic Analyzer" -> "Intermediate Code Generator" [label="Syntax Tree"]
+	"Intermediate Code Generator" -> "Back End" [label="Intermediate Representation"]
+	edge [dir=both]
+	"Source Codes" -> "Symbol Table"
+	Lexer -> "Symbol Table"
+	Parser -> "Symbol Table"
+	"Semantic Analyzer" -> "Symbol Table"
+	"Intermediate Code Generator" -> "Symbol Table"
+	"Back End" -> "Symbol Table"
+}

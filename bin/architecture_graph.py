@@ -35,5 +35,5 @@ g.edge('Semantic Analyzer', 'Symbol Table')
 g.edge('Intermediate Code Generator','Symbol Table')
 g.edge('Back End', 'Symbol Table')
 
-#g.view()
-g.render()
+g.view()
+#g.render()
