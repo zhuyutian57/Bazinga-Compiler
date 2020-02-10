@@ -3,9 +3,9 @@ from graphviz import Digraph
 g = Digraph(
     name = 'architecture',
     filename = 'architecture',
-    directory = '../images',
+    directory = './',
     format = 'png',
-    engine = 'sfdp'
+    engine = 'dot'
     )
 
 g.attr('node', shape = 'ellipse')
@@ -28,12 +28,12 @@ g.edge('Intermediate Code Generator','Back End',
         label = 'Intermediate Representation')
 
 g.attr('edge', dir = 'both')
-g.edge('Source Codes', 'Symbol Table')
+#g.edge('Source Codes', 'Symbol Table')
 g.edge('Lexer', 'Symbol Table')
 g.edge('Parser', 'Symbol Table')
 g.edge('Semantic Analyzer', 'Symbol Table')
 g.edge('Intermediate Code Generator','Symbol Table')
 g.edge('Back End', 'Symbol Table')
 
-g.view()
-#g.render()
+#g.view()
+g.render()

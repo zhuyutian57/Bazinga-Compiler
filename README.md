@@ -13,10 +13,14 @@ This is a simple C++ compiler. I try to implement all functions that should be i
 - **Intermediate Code Generator**: Generate a code representation which is similar to the target code such as low-level or machine-like representation.  
 - **Back End**: Code optimizing code generating. They are out of this project.
 
-## 2.Lexer
+## 2.Symbol Table
 
-## 3.Parser
+​	
 
-## 4.Semantic Analyzer
+## 3.Lexer
 
-## 5.Intermediate Code Generator
+## 4.Parser
+
+## 5.Semantic Analyzer
+
+## 6.Intermediate Code Generator
