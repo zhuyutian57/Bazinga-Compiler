@@ -3,46 +3,31 @@
 #include <string>
 #include <vector>
 
+#include "Ast.h"
+#include "Node.h"
+
 namespace lexer {
 
-/* Build DFA directly from regular defination
- * */
+//(TODO) Implememt of DFA
+// Build DFA directly from regular defination
 class Automata {
 
 public:
-	Automata(){}
+	Automata() {
+		ast = new Ast;
+	}
+
+	void Gen_ast(const std::string& path) {
+		ast->Regonize(path);
+	}
 
 private:
-	class Node;
-	class Container;
-	Node* root; // Abstract Syntax Tree root
-	std::vector<Container*> cv;
+	
+
+private:
+	Ast *ast;
 
 }; // Automata
-
-class Automata::Node {
-
-public:
-	Node(const std::string& s)
-		: name(s) { edge.clear(); }
-
-private:
-	std::string name;
-	std::map<std::string, Node*> edge;
-	
-}; // Automata::Node
-
-class Automata::Container {
-
-public:
-	Container(const std::string& s)
-		: name(s) {}
-
-private:
-	std::string name;
-	vector<char> ch;
-
-}; // Automata::Container
 
 } // lexer
 
