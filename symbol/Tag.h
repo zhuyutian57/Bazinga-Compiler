@@ -7,13 +7,13 @@ class Tag {
  * */
 
 public:
-	
-	// Types
-	// int, float
-	const static int BASIC = 0;
+  
+  // Types
+  // int, float
+  const static int BASIC = 0;
 
-	// Variables
-	const static int ID = 1;
+  // Variables
+  const static int ID = 1;
 
 }; // Tag
 

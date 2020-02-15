@@ -9,14 +9,14 @@ namespace lexer {
 class Container {
 
 public:
-	Container(const std::string& s)
-		: name(s) {}
+  Container(const std::string& s)
+    : name(s) {}
 
-	void insert(char c) { chv.push_back(c); }
+  void insert(char c) { chv.push_back(c); }
 
 private:
-	std::string name;
-	std::vector<char> chv;
+  std::string name;
+  std::vector<char> chv;
 
 }; // Container
 

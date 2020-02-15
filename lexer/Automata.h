@@ -13,19 +13,19 @@ namespace lexer {
 class Automata {
 
 public:
-	Automata() {
-		ast = new Ast;
-	}
+  Automata() {
+    ast = new Ast;
+  }
 
-	void Gen_ast(const std::string& path) {
-		ast->Regonize(path);
-	}
-
-private:
-	
+  void Gen_ast(const std::string& path) {
+    ast->Regonize(path);
+  }
 
 private:
-	Ast *ast;
+  
+
+private:
+  Ast *ast;
 
 }; // Automata
 

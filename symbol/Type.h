@@ -9,13 +9,13 @@ namespace symbol {
 class Type : public Word {
 
 public:
-	Type(const std::string& s, int tag, int w)
-		: Word(s, tag), width(w) {}
+  Type(const std::string& s, int tag, int w)
+    : Word(s, tag), width(w) {}
 
-	const int& Width() const { return width; }
+  const int& Width() const { return width; }
 
 private:
-	int width;
+  int width;
 
 }; // Type
 

@@ -1,12 +1,12 @@
 from graphviz import Digraph
 
 g = Digraph(
-    name = 'architecture',
-    filename = 'architecture',
-    directory = './',
-    format = 'png',
-    engine = 'dot'
-    )
+  name = 'architecture',
+  filename = 'architecture',
+  directory = './',
+  format = 'png',
+  engine = 'dot'
+  )
 
 g.attr('node', shape = 'ellipse')
 g.node(name = 'Source Codes')

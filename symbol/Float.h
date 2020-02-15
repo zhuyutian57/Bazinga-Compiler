@@ -9,11 +9,11 @@ namespace symbol {
 class Float : public Word {
 
 public:
-	Integer(const std::string& s)
-		: Word(s, Tag::FLOAT), val(std::stof(s)) {} 
+  Integer(const std::string& s)
+    : Word(s, Tag::FLOAT), val(std::stof(s)) {} 
 
 private:
-	float val;
+  float val;
 
 }; // Float
 

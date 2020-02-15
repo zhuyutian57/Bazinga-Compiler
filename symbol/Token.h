@@ -4,14 +4,14 @@ namespace symbol {
 class Token {
 
 public:
-	Token(const int t) : tag(t) {}
+  Token(const int t) : tag(t) {}
 
-	const int& Tag() const { return tag; }
+  const int& Tag() const { return tag; }
 
 protected:
-	int tag;
+  int tag;
 
-};	
+};  
 
 } // Symbol
 
