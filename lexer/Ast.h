@@ -16,7 +16,7 @@ namespace lexer {
 class Ast {
 
 public:
-  Ast() {
+  Ast() : lexeme_tree(NULL) {
     mpr["letters"] = build_letters_tree();
     mpr["digits"] = build_digits_tree();
   }
@@ -25,16 +25,21 @@ public:
     build_trees(path);
   }
 
-  Node* Tree(const std::string& s) {
+  Node* Lexeme_tree() {
+    if(lexeme_tree == NULL) {
+      lexeme_tree =
+        new Node(CAT, mpr["tests"],
+            new Node('#'));
+    }
+    return lexeme_tree;
+  } 
+  
+  // For tests
+  /*Node* Tree(const std::string& s) {
     return mpr[s];
-  }
+  }*/
 
 private:
-  
-  void err() {
-    std::cout << "What the fuck are you doing?" << '\n';
-  }
-
   //TODO So ugly, make it beautiful
   Node* create_node(const std::string& s) {
     if(s == "(") return new Node(LBR);
@@ -150,6 +155,7 @@ private:
   }
 
 private:
+  Node *lexeme_tree;
   std::map<std::string, Node*> mpr; // Reserve trees of every regular definations
 
 }; // Ast

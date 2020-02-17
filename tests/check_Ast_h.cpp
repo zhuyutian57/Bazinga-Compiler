@@ -29,18 +29,18 @@ const int mod = 1000000007;
 
 void dfs(lexer::Node* p) {
 	if(p == NULL) return;
-	if(p->Nt() == lexer::LEAF) cout << p->Ch();
-	if(p->Nt() == lexer::OR) {
-		//cout << '(';
+	if(p->Nt() == lexer::LEAF) {
+    cout << p->Ch();
+  }
+  if(p->Nt() == lexer::OR) {
 		dfs(p->Ls());
 		cout << '|';
 		dfs(p->Rs());
-		//cout << ')';
 	}
 	if(p->Nt() == lexer::CAT) {
 		dfs(p->Ls());
-		//cout << ' ';
-		dfs(p->Rs());
+		cout << '-';
+    dfs(p->Rs());
 	}
 	if(p->Nt() == lexer::STAR) {
 		cout << '(';
@@ -64,7 +64,7 @@ int main() {
 	//cout << '\n';
 	t->Regonize("../lexer/regular_defination.rd");
 	cout << "ok" << endl;
-	dfs(t->Tree("Lexeme"));
+	dfs(t->Lexeme_tree());
 	cout << endl;
 	return 0;
 }

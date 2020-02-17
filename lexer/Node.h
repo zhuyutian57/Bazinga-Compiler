@@ -3,6 +3,10 @@
 
 namespace lexer {
 
+void err() {
+  std::cout << "What the fuck are you doing?" << '\n';
+}
+
 // AST node
 
 enum NodeType {
