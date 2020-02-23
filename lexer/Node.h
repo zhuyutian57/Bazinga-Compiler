@@ -1,14 +1,13 @@
 
+#include <iostream>
 #include <string>
+
+#ifndef _NODE_H_
+#define _NODE_H_
 
 namespace lexer {
 
-void err() {
-  std::cout << "What the fuck are you doing?" << '\n';
-}
-
 // AST node
-
 enum NodeType {
   LEAF, STAR, CAT, OR, PLUS,
   SUBT, LBR, RBR }; // Used for build trees
@@ -21,10 +20,10 @@ public:
   Node(char c)
     : nt(LEAF), ch(c), ls(NULL), rs(NULL) {}
   
-  NodeType& Nt() { return nt; }
-  char& Ch() { return ch; }
-  Node* Ls() { return ls; }
-  Node* Rs() { return rs; }
+  NodeType Nt() const { return nt; }
+  char Ch() const { return ch; }
+  Node* Ls() const { return ls; }
+  Node* Rs() const { return rs; }
   
   void Set_ls(Node *t) { ls = t; }
   void Set_rs(Node *t) { rs = t; }
@@ -34,7 +33,8 @@ private:
   char ch;
   Node *ls, *rs;
   
-}; // Node
+}; // class Node
 
-} // lexer
+} // namespace lexer
 
+#endif

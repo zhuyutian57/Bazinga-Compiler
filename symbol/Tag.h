@@ -1,4 +1,7 @@
 
+#ifndef _TAG_H_
+#define _TAG_H_
+
 namespace symbol {
 
 class Tag {
@@ -10,12 +13,16 @@ public:
   
   // Types
   // int, float
-  const static int BASIC = 0;
+  const static int BASIC = 300;
 
   // Variables
-  const static int ID = 1;
+  const static int ID = 301;
 
-}; // Tag
+  // Data types
+  const static int INTEGER = 302, FLOAT = 303;
 
-} // symbol
+}; // class Tag
 
+} // namespace symbol
+
+#endif

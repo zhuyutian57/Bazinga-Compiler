@@ -1,4 +1,7 @@
 
+#ifndef _TOKEN_H_
+#define _TOKEN_H_
+
 namespace symbol {
 
 class Token {
@@ -11,7 +14,8 @@ public:
 protected:
   int tag;
 
-};  
+}; // class Token 
 
-} // Symbol
+} // namespace symbol
 
+#endif

@@ -1,21 +1,24 @@
 
 #include <string>
 
-#include "Tag.h"
 #include "Word.h"
+
+#ifndef _FLOAT_H_
+#define _FLOAT_H_
 
 namespace symbol {
 
 class Float : public Word {
 
 public:
-  Integer(const std::string& s)
+  Float(const std::string& s)
     : Word(s, Tag::FLOAT), val(std::stof(s)) {} 
 
 private:
   float val;
 
-}; // Float
+}; // class Float
 
-} // symbol
+} // namespace symbol
 
+#endif

@@ -25,14 +25,15 @@ const int INF = 1 << 30;
 const double eps = 1e-6;
 const int mod = 1000000007;
 
-#include "./lexer/Lexer.h"
+#include "../lexer/Lexer.h"
 
 int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
 	lexer::Lexer* t = new lexer::Lexer();
-	symbol::Type* i = (symbol::Type*)t->Find("int"); 
-	cout << i->Width() << ' ' << i->Lexe() << ' '
-		<< i->Tag() << endl;
-	return 0;
+  char *rdp = "regular_defination/regular_defination.rd";
+  char *scp = "source_codes/1.bzg";
+  cout << t->Build(rdp, scp) << '\n';
+  
+  return 0;
 }

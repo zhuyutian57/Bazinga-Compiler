@@ -1,7 +1,11 @@
 
 #include <string>
 
+#include "Tag.h"
 #include "Token.h"
+
+#ifndef _WORD_H_
+#define _WORD_H_
 
 namespace symbol {
 
@@ -16,7 +20,8 @@ public:
 private:
   std::string lexeme;
 
-}; // Word
+}; // class Word
 
-} // symbol
+} // namespace symbol
 
+#endif

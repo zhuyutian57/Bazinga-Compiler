@@ -1,43 +1,91 @@
 
-#include <iostream>
-#include <map>
 #include <set>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "Container.h"
 #include "Node.h"
 
+#include "../message/Message.h"
+
+#ifndef _AST_H_
+#define _AST_H_
+
 namespace lexer {
+
+template<typename T>  
+void move_set2set(std::set<T>* in, 
+    const std::set<T>* out) {
+  for(auto e : (*out)) in->insert(e);
+}
 
 // Abstract Syntax Tree 
 class Ast {
 
+private:  
+  struct Info {
+    bool nullable;
+    std::set<int> *firstpos, *lastpos;
+    Info() {
+     firstpos = new std::set<int>;
+     lastpos = new std::set<int>;
+    }
+    ~Info() {
+      delete firstpos, lastpos;
+    }
+  }; // struct Info
+
+
 public:
-  Ast() : lexeme_tree(NULL) {
+  Ast() : leaf_size(-1), lexeme_tree(NULL) {
     mpr["letters"] = build_letters_tree();
     mpr["digits"] = build_digits_tree();
+    root_firstpos = new std::set<int>;
+    posch = new std::unordered_map<int, char>;
+    characters = new std::set<char>;
+  }
+  ~Ast() {
+    delete posch, characters;
+    delete root_firstpos;
+    if(lexeme_tree != NULL)
+      delete lexeme_tree;
   }
 
-  void Regonize(const char* path) {
-    build_trees(path);
+  bool Build(const char* rd_path) {
+    if(!build_trees(rd_path)) return false;
+    lexeme_tree = new Node(CAT, mpr["Lexeme"], new Node('#'));
+    Info* root = calculate(lexeme_tree);
+    move_set2set(root_firstpos, root->firstpos);
+    delete root;
+    return true;
   }
 
-  Node* Lexeme_tree() {
-    if(lexeme_tree == NULL) {
-      lexeme_tree =
-        new Node(CAT, mpr["tests"],
-            new Node('#'));
-    }
-    return lexeme_tree;
-  } 
+  int Leaf_size() { return leaf_size; }
+  const std::set<int>* Root_firstpos() {
+    return root_firstpos;
+  }
+  const std::set<char>* Characters() {
+    return characters;
+  }
+  char Posch(int i) {
+    return (*posch)[i];
+  }
+  const std::vector<std::set<int>* >& Followpos() {
+    return followpos;
+  }
   
-  // For tests
-  /*Node* Tree(const std::string& s) {
-    return mpr[s];
-  }*/
+private:
+  Node *lexeme_tree;
+  // Reserve trees of every regular definations
+  std::unordered_map<std::string, Node*> mpr;
+
+  int leaf_size;
+  std::set<int>* root_firstpos;
+  std::set<char>* characters;
+  std::unordered_map<int, char>* posch;
+  std::vector<std::set<int>* > followpos;
 
 private:
   //TODO So ugly, make it beautiful
@@ -75,7 +123,7 @@ private:
     return p;
   }
 
-  Node* build(std::istringstream& ss) {
+  Node* build_subtrees(std::istringstream& ss) {
     std::string x;
     std::stack<Node*>* S = new std::stack<Node*>;
     while(ss >> x) {
@@ -101,16 +149,20 @@ private:
     return merge_nodes(S);
   }
 
-  void build_trees(const char* path) {
+  bool build_trees(const char* path) {
     freopen(path, "r", stdin);
     std::string rd;
     while(std::getline(std::cin, rd)) {
       std::istringstream ss(rd); // make rd as words stream 
       std::string name, flag;
       ss >> name >> flag;
-      if(flag != "->") { err(); return; }
-      mpr[name] = build(ss);
-    } 
+      if(flag != "->") {
+        message::err_rd(name, ss);
+        return false;
+      }
+      mpr[name] = build_subtrees(ss);
+    }
+    return true;
   }
 
   Node* build_or_tree(const std::string& s) {
@@ -154,11 +206,69 @@ private:
     return build_or_tree(s);
   }
 
-private:
-  Node *lexeme_tree;
-  std::map<std::string, Node*> mpr; // Reserve trees of every regular definations
+  // ========================================================
+  // Calculate followpos
 
-}; // Ast
+  void cal_followpos(std::set<int>* in, std::set<int>* out) {
+    for(auto i : (*in))
+      for(auto n : (*out))
+        followpos[i]->insert(n);
+  }
 
-} // lexer
+  Info* calculate(const Node *p) {
+    Info* info = new Info();
+    switch(p->Nt()) {
+      case LEAF:
+        ++leaf_size;
+        info->nullable = false;
+        info->firstpos->insert(leaf_size);
+        info->lastpos->insert(leaf_size);
+        (*posch)[leaf_size] = p->Ch();
+        characters->insert(p->Ch());
+        followpos.push_back(new std::set<int>);
+        break;
+      case STAR: {
+        Info* i_ls = calculate(p->Ls());
+        info->nullable = true;
+        move_set2set(info->firstpos, i_ls->firstpos);
+        move_set2set(info->lastpos, i_ls->lastpos);
+        cal_followpos(info->lastpos, info->firstpos);
+        delete i_ls;
+        break;
+      }
+      case CAT: {
+        Info *i_ls = calculate(p->Ls());
+        Info *i_rs = calculate(p->Rs());
+        info->nullable = (i_ls->nullable && i_rs->nullable);
+        cal_followpos(i_ls->lastpos, i_rs->firstpos);
+        move_set2set(info->firstpos, i_ls->firstpos);
+        move_set2set(info->lastpos, i_rs->lastpos);
+        if(i_ls->nullable)
+          move_set2set(info->firstpos, i_rs->firstpos);
+        if(i_rs->nullable)
+          move_set2set(info->lastpos, i_ls->lastpos);
+        delete i_ls, i_rs;
+        break;
+      }
+      case OR: {
+        Info *i_ls = calculate(p->Ls());
+        Info *i_rs = calculate(p->Rs());
+        info->nullable = (i_ls->nullable || i_rs->nullable);
+        move_set2set(info->firstpos, i_ls->firstpos);
+        move_set2set(info->firstpos, i_rs->firstpos);
+        move_set2set(info->lastpos, i_ls->lastpos);
+        move_set2set(info->lastpos, i_rs->lastpos);
+        delete i_ls, i_rs;
+        break;
+      }
+      case PLUS: break; //TODO add PLUS
+      default: message::error("Fail to build AST!\n");
+    }
+    return info;
+  }
 
+}; // class Ast
+
+} // namespace lexer
+
+#endif

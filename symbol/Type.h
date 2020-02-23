@@ -1,8 +1,10 @@
 
 #include <string>
 
-#include "Tag.h"
 #include "Word.h"
+
+#ifndef _TYPE_H_
+#define _TYPE_H_
 
 namespace symbol {
 
@@ -17,7 +19,8 @@ public:
 private:
   int width;
 
-}; // Type
+}; // class Type
 
-} // symbol
+} // namespace symbol
 
+#endif

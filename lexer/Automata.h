@@ -1,117 +1,158 @@
 
 #include <map>
+#include <queue>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Ast.h"
-#include "Info.h"
+
+#ifndef _AUTOMATA_H_
+#define _AUTOMATA_H_
 
 namespace lexer {
+
+#define State int
+#define Edge std::pair<State, char>
+#define Pos_set std::set<int>
 
 //(TODO) Implememt of DFA
 // Build DFA directly from regular defination
 class Automata {
 
-public:
-  Automata() : leaf_size(-1) {
-    ast = new Ast;
-    characters = new std::set<char>;
-    posch = new std::map<int, char>;
-    followpos.clear();
-  }
-
-  void Build(const char* path) {
-    ast->Regonize(path);
-    calculate();
-  }
-
-  // For tests
-  std::map<int, char>* Posch() { return posch; }
-  std::vector<std::set<int>* >& Followpos() { return followpos; }
-
 private:
-
-  // Insert n in "out" to followpos(i) & (i in "in")
-  void cal_followpos(std::set<int>* in, std::set<int>* out) {
-    for(auto i : (*in))
-      for(auto n : (*out))
-        followpos[i]->insert(n);
-  }
-
-  void move(std::set<int>* in, std::set<int>* out) {
-    for(auto e : (*out)) in->insert(e);
-  }
-
-  Info* cal_followpos(Node *p) {
-    Info* info = new Info();
-    switch(p->Nt()) {
-      case LEAF:
-        ++leaf_size;
-        info->Set_nullable(false);
-        info->Firstpos()->insert(leaf_size);
-        info->Lastpos()->insert(leaf_size);
-        (*posch)[leaf_size] = p->Ch();
-        characters->insert(p->Ch());
-        followpos.push_back(new std::set<int>);
-        break;
-      case STAR: {
-        Info* i_ls = cal_followpos(p->Ls());
-        info->Set_nullable(true);
-        move(info->Firstpos(), i_ls->Firstpos());
-        move(info->Lastpos(), i_ls->Lastpos());
-        cal_followpos(info->Lastpos(), info->Firstpos());
-        delete i_ls;
-        break;
+  struct Hash {
+    std::size_t operator()(const Pos_set& t) const {
+      const std::size_t MOD = 1000000007;
+      const std::size_t B = 3;
+      std::size_t W = 1, C = 0;
+      std::size_t h = 998244353;
+      for(auto x : t) {
+        for(; C < x; C++) W = (W * B) % MOD;
+        h = (h * W) % MOD;
       }
-      case CAT: {
-        Info *i_ls = cal_followpos(p->Ls());
-        Info *i_rs = cal_followpos(p->Rs());
-        info->Set_nullable(i_ls->Nullable() && i_rs->Nullable());
-        cal_followpos(i_ls->Lastpos(), i_rs->Firstpos());
-        move(info->Firstpos(), i_ls->Firstpos());
-        move(info->Lastpos(), i_rs->Lastpos());
-        if(i_ls->Nullable())
-          move(info->Firstpos(), i_rs->Firstpos());
-        if(i_rs->Nullable())
-          move(info->Lastpos(), i_ls->Lastpos());
-        delete i_ls, i_rs;
-        break;
-      }
-      case OR: {
-        Info *i_ls = cal_followpos(p->Ls());
-        Info *i_rs = cal_followpos(p->Rs());
-        info->Set_nullable(i_ls->Nullable() || i_rs->Nullable());
-        move(info->Firstpos(), i_ls->Firstpos());
-        move(info->Firstpos(), i_rs->Firstpos());
-        move(info->Lastpos(), i_ls->Lastpos());
-        move(info->Lastpos(), i_rs->Lastpos());
-        delete i_ls, i_rs;
-        break;
-      }
-      case PLUS: break; //TODO add PLUS
-      default:
-        err();
+      return h;
     }
-    return info;
+  }; //struct Hash
+
+public:
+  Automata() {
+    ast = new Ast;
+    pos_sets = new std::vector<Pos_set*>;
+    alphabet = new std::set<char>;
+    edges = new std::map<Edge, State>;
+    acc = new std::set<State>;
+  
+  }
+  ~Automata() {
+    delete ast, alphabet, edges, acc;
+    delete [] pos_sets;
   }
 
-  void calculate() {
-    Info* root = cal_followpos(ast->Lexeme_tree());
-    start = root->Firstpos();
-    root->Set_firstpos(NULL);
-    delete root;
+  void Build(const char* rd_path) {
+    ast->Build(rd_path);
+    move_set2set(alphabet, ast->Characters());
+    pos_sets->push_back(new Pos_set);
+    move_set2set((*pos_sets)[0], ast->Root_firstpos());
+    start = 0;
+    state_size = 1;
+    build_dfa(ast->Followpos());
+    message::info_automata(
+        state_size, start, alphabet, acc);
   }
+
+  void Reset() { cur = start; }
+
+  State Goto(char ch) {
+    Edge u = std::make_pair(cur, ch);
+    if(edges->find(u) == edges->end())
+      return -1;
+    cur = (*edges)[u];
+    return cur;
+  }
+
+  State Goto(State i, char ch) {
+    Edge u = std::make_pair(i, ch);
+    if(edges->find(u) == edges->end())
+      return -1;
+    return (*edges)[u];
+  }
+
+  State state() { return cur; }
+
+  bool Accepted(State i) {
+    return acc->find(i) != acc->end();
+  }
+
+  bool Accepted() {
+    return acc->find(cur) != acc->end();
+  }
+
+  int State_size() { return state_size; }
+  const State Begin() { return start; }
+  const std::set<char>* Alphabet() { return alphabet; }
+  const Pos_set* Pos_sets(int i) {
+    return (*pos_sets)[i];
+  }
+  const std::set<State>* Ends() {
+    return acc;
+  }
+  
 
 private:
-  int leaf_size;
   Ast *ast;
-  std::set<char>* characters;
-  std::set<int>* start;
-  std::map<int, char>* posch;
-  std::vector<std::set<int>* > followpos;
+  
+  int state_size;
+  State start;
+  std::vector<Pos_set*>* pos_sets;
+  std::set<char>* alphabet;
+  std::map<Edge, State>* edges;
+  std::set<State>* acc;
+  
+  State cur;
 
-}; // Automata
+private:
 
-} // lexer
+  void build_dfa(const std::vector<std::set<int>* >& followpos) {
+    const int END_POS = ast->Leaf_size();
+    std::unordered_map<Pos_set, State, Hash> mps;
+    std::unordered_map<State, bool> vis;
+    std::queue<State> Q;
+    Q.push(start);
+    mps[(*(*pos_sets)[0])] = start;
+    // u -> v
+    for(State u; !Q.empty(); ) {
+      u = Q.front(); Q.pop();
+      if(vis.find(u) != vis.end()) continue;
+      vis[u] = true;
+      if((*pos_sets)[u]->find(END_POS) != (*pos_sets)[u]->end())
+        acc->insert(u);
+      for(auto ch : (*alphabet)) {
+        Pos_set *v = new Pos_set;
+        for(auto p : (*(*pos_sets)[u])) {
+          if(ast->Posch(p) == ch) {
+            move_set2set(v, followpos[p]);
+          }
+        }
+        if(v->empty()) { delete v; continue; }
+        State t; // Get id of v
+        if(mps.find(*v) == mps.end()) {
+          t = mps[*v] = state_size++;
+          pos_sets->push_back(v);
+          Q.push(t);
+        } else {
+          t = mps[*v];
+          delete v;
+        }
+        (*edges)[std::make_pair(u, ch)] = t;
+      }
+    }
+  }
 
+}; // class Automata
+
+} // namespace lexer
+
+#endif

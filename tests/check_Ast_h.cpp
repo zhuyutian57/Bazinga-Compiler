@@ -27,7 +27,7 @@ const int mod = 1000000007;
 
 #include "../lexer/Ast.h"
 
-void dfs(lexer::Node* p) {
+void dfs(const lexer::Node* p) {
 	if(p == NULL) return;
 	if(p->Nt() == lexer::LEAF) {
     cout << p->Ch();
@@ -58,13 +58,25 @@ int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
 	lexer::Ast *t = new lexer::Ast();
-	//dfs(t->Tree("digits"));
-	//cout << '\n';
-	//dfs(t->Tree("letters"));
-	//cout << '\n';
-	t->Regonize("../lexer/regular_defination.rd");
-	cout << "ok" << endl;
+	/*dfs(t->Tree("digits"));
+	cout << '\n';
+	dfs(t->Tree("letters"));
+	cout << '\n';
+	*/
+  t->Build("../lexer/regular_defination.rd");
 	dfs(t->Lexeme_tree());
 	cout << endl;
+  cout << "============= OK =============" << endl;
+  cout << "Characters :";
+  for(auto x : (*t->Characters())) cout << ' ' << x;
+  cout << '\n';
+  cout << t->Followpos().size() << " followpos sets :"<< '\n';
+  for(int i = 0; i < t->Followpos().size(); i++) {
+    cout << i << '-' << t->Posch(i) << " : ";
+    for(auto x : (*t->Followpos()[i]))
+      cout << ' ' << x;
+    cout << endl;
+  }
+  cout << "==============================" << '\n';
 	return 0;
 }
