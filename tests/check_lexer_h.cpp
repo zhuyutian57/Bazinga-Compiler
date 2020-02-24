@@ -31,7 +31,7 @@ int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
 	lexer::Lexer* t = new lexer::Lexer();
-  char *rdp = "regular_defination/regular_defination.rd";
+  char *rdp = "../lexer/regular_definations/regular_defination.rd";
   char *scp = "source_codes/1.bzg";
   cout << t->Build(rdp, scp) << '\n';
   

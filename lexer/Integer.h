@@ -6,19 +6,20 @@
 #ifndef _INTEGER_H_
 #define _INTEGER_H_
 
-namespace symbol {
+namespace lexer {
 
 class Integer : public Word {
 
 public:
   Integer(const std::string& s)
-    : Word(s, Tag::INTEGER), val(std::stoi(s)) {} 
+    : Word(s, symbol::Tag::INTEGER),
+      val(std::stoi(s)) {} 
 
 private:
   int val;
 
 }; // class Integer
 
-} // namespace symbol
+} // namespace lexer
 
 #endif

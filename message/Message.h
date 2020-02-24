@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../symbol/Word.h"
+#include "../lexer/Word.h"
 
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
@@ -49,11 +49,24 @@ namespace message {
       std::unordered_map<std::string, void*>* words,
       const std::vector<void*>* tokens) {
     std::cout << " Token stream : \n";
+    std::string sym = ";+-*/=()";
     for(auto addr : (*tokens)) {
-      symbol::Word *p = (symbol::Word*)addr;
-      std::cout << '<' << p->Tag() << ',';
-      std::cout << p->Lexe() << ',';
-      std::cout << (*words)[p->Lexe()] << ">\n";
+      lexer::Token *t = (lexer::Token*)addr;
+      // Check weather *t is a word
+      bool flag = false;
+      for(auto ch : sym)
+        if(ch == t->Tag())
+          flag = true;
+      if(!flag) {
+        lexer::Word *p = (lexer::Word*)addr;
+        std::cout << '<' << p->Tag() << ',';
+        std::cout << p->Lexe() << ',';
+        std::cout << (*words)[p->Lexe()] << ">\n";
+      } else {
+        std::cout << '<' << char(t->Tag()) << ',';
+        std::cout << (*words)[std::string(1, t->Tag())]
+                  << ">\n";
+      }
     }
   }
 

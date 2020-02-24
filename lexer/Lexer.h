@@ -5,7 +5,9 @@
 #include <vector>
 
 #include "Automata.h"
-#include "../symbol/HeadFiles.h"
+#include "Float.h"
+#include "Integer.h"
+#include "Type.h"
 
 #ifndef _LEXER_H_
 #define _LEXER_H_
@@ -42,16 +44,12 @@ public:
     words = new std::unordered_map<std::string, void*>;
     tokens = new std::vector<void*>;
    
-    reserve(new symbol::Word(";", ';'));
-    reserve(new symbol::Word("+", '+'));
-    reserve(new symbol::Word("-", '-'));
-    reserve(new symbol::Word("*", '*'));
-    reserve(new symbol::Word("/", '/'));
-    reserve(new symbol::Word("=", '='));
-    reserve(new symbol::Word("(", '('));
-    reserve(new symbol::Word(")", ')'));
-    reserve(new symbol::Type("int", symbol::Tag::BASIC, 4));
-    reserve(new symbol::Type("float", symbol::Tag::BASIC, 8));
+    reserve(new Token(';')); reserve(new Token('+'));
+    reserve(new Token('-')); reserve(new Token('*'));
+    reserve(new Token('/')); reserve(new Token('='));
+    reserve(new Token('(')); reserve(new Token(')'));
+    reserve(new Type("int", symbol::Tag::TYPE, 4));
+    reserve(new Type("float", symbol::Tag::TYPE, 8));
   }
   ~Lexer() {
     delete words, tokens;
@@ -79,19 +77,23 @@ private:
 
 private:
 
-  void reserve(const symbol::Word* w) {
+  void reserve(const Token* t) {
+    (*words)[std::string(1, t->Tag())] = (void*)t;
+  }
+
+  void reserve(const Word* w) {
     (*words)[w->Lexe()] = (void*)w;
   }
 
   void add_new_word(const std::string& word) {
     if(word[0] >= '0' && word[0] <= '9') {
       if(word.find('.') == std::string::npos) {
-        reserve(new symbol::Float(word));
+        reserve(new Float(word));
       } else {
-        reserve(new symbol::Integer(word));
+        reserve(new Integer(word));
       }
     } else {
-      reserve(new symbol::Word(word, symbol::Tag::ID));
+      reserve(new Word(word, symbol::Tag::ID));
     }
   }
 

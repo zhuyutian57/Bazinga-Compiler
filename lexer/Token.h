@@ -1,8 +1,10 @@
 
+#include "../symbol/Tag.h"
+
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 
-namespace symbol {
+namespace lexer {
 
 class Token {
 
@@ -16,6 +18,6 @@ protected:
 
 }; // class Token 
 
-} // namespace symbol
+} // namespace lexer
 
 #endif

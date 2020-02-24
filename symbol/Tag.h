@@ -13,7 +13,7 @@ public:
   
   // Types
   // int, float
-  const static int BASIC = 300;
+  const static int TYPE = 300;
 
   // Variables
   const static int ID = 301;

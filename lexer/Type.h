@@ -6,7 +6,7 @@
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
-namespace symbol {
+namespace lexer {
 
 class Type : public Word {
 
@@ -21,6 +21,6 @@ private:
 
 }; // class Type
 
-} // namespace symbol
+} // namespace lexer
 
 #endif

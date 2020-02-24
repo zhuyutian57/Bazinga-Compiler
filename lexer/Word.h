@@ -1,13 +1,12 @@
 
 #include <string>
 
-#include "Tag.h"
 #include "Token.h"
 
 #ifndef _WORD_H_
 #define _WORD_H_
 
-namespace symbol {
+namespace lexer {
 
 class Word : public Token {
 
@@ -22,6 +21,6 @@ private:
 
 }; // class Word
 
-} // namespace symbol
+} // namespace lexer
 
 #endif
