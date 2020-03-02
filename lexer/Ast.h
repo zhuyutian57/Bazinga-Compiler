@@ -149,8 +149,8 @@ private:
     return merge_nodes(S);
   }
 
-  bool build_trees(const char* path) {
-    freopen(path, "r", stdin);
+  bool build_trees(const char* rd_path) {
+    freopen(rd_path, "r", stdin);
     std::string rd;
     while(std::getline(std::cin, rd)) {
       std::istringstream ss(rd); // make rd as words stream 

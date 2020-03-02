@@ -1,7 +1,7 @@
 /*-----------------------------------------------
-*	Filename: test.cpp
+*	Filename: check_Action_h.cpp
 *	Author: zhuyutian
-*	Date: 2020.02.13
+*	Date: 2020.03.02
 -----------------------------------------------*/
 #include <iostream>
 #include <algorithm>
@@ -25,15 +25,15 @@ const int INF = 1 << 30;
 const double eps = 1e-6;
 const int mod = 1000000007;
 
-#include "../lexer/Lexer.h"
+#include <unordered_map>
+#include "../parser/Action.h"
 
 int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
-	lexer::Lexer* t = new lexer::Lexer();
-  const char *rdp = "../lexer/regular_definations/regular_defination.rd";
-  const char *scp = "source_codes/1.bzg";
-  cout << t->Build(rdp, scp) << '\n';
+	const char *g_path = "../parser/grammars/test.cfg";
+  parser::Action *ac_table = new parser::Action();
+  cout << ac_table->Build(g_path) << endl;
   
-  return 0;
+	return 0;
 }

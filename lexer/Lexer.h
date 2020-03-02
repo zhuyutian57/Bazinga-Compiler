@@ -44,12 +44,12 @@ public:
     words = new std::unordered_map<std::string, void*>;
     tokens = new std::vector<void*>;
    
-    reserve(new Token(';')); reserve(new Token('+'));
-    reserve(new Token('-')); reserve(new Token('*'));
-    reserve(new Token('/')); reserve(new Token('='));
-    reserve(new Token('(')); reserve(new Token(')'));
-    reserve(new Type("int", symbol::Tag::TYPE, 4));
-    reserve(new Type("float", symbol::Tag::TYPE, 8));
+    reserve(new Unit(';')); reserve(new Unit('+'));
+    reserve(new Unit('-')); reserve(new Unit('*'));
+    reserve(new Unit('/')); reserve(new Unit('='));
+    reserve(new Unit('(')); reserve(new Unit(')'));
+    reserve(new Type("int", Tag::TYPE, 4));
+    reserve(new Type("float", Tag::TYPE, 8));
   }
   ~Lexer() {
     delete words, tokens;
@@ -62,6 +62,7 @@ public:
       return false;
     }
     message::info_lexer(words, tokens);
+    tokens->push_back(new Unit(Tag::END));
     return true;
   }
 
@@ -77,7 +78,7 @@ private:
 
 private:
 
-  void reserve(const Token* t) {
+  void reserve(const Unit* t) {
     (*words)[std::string(1, t->Tag())] = (void*)t;
   }
 
