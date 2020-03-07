@@ -1,4 +1,4 @@
-# C++ Compiler
+# Bazinga Compiler
 
 This is a simple C++ compiler. I try to implement all functions that should be included in C++(basic grammars). The produce of this project will be a translator(C++), without back end.
 
@@ -6,21 +6,20 @@ This is a simple C++ compiler. I try to implement all functions that should be i
 
 ![Translator Architecture](./images/architecture.png)
 
-- **Symbol Table**:  Manage variables' informations during translation
+- **Symbol Table**:  Will be built in LR Parser.
 - **Lexer**:  Arrange characters  from source codes(cpp files) and produce token stream.$Token:<token-name,token-type>$
-- **Parser**: Analyze the structure of token stream based on Context-Free Grammar and LALR(1) algorithm. 
-- **Semantic Analyzer**: Include type checking and calculating variables' attributes.  
-- **Intermediate Code Generator**: Generate a code representation which is similar to the target code such as low-level or machine-like representation.  
-- **Back End**: Code optimizing code generating. They are out of this project.
+- **LR Parser**: Integrating parsing, semantic analysis and intermediate code generating
 
 ## 2.Symbol Table
 
-​	
-
 ## 3.Lexer
 
-## 4.Parser
+​	For future expansion,  the Lexer reads regular definitions from txt(rd in project) files and generates a abstract syntax tree(AST). Based on AST, we will build a DFA directly from the AST we build before.
 
-## 5.Semantic Analyzer
+​	The Lexer use automata(DFA) to recognizes tokens. 
 
-## 6.Intermediate Code Generator
+## 4.LR Parser(TODO)
+
+​	Like Lexer, for future expansion, the LR Parser will read the grammars we define in txt(cfg) files and build LALR analyzer. Then, what we should do is implementing every semantic actions of every nonterminals, including shift actions and reduces.
+
+​	So, we can regard type-check, attribute-calculating, intermediate-code-generating as semantic actions. As a result, Parser, Semantic Analyzer and Intermediate Code Generator are assembled in LR Parser.

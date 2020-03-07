@@ -35,7 +35,7 @@ namespace parser {
 class Action {
 
 public:
-  Action() {
+  Action() {/*{{{*/
     // Terminals
     reserve("TYPE", Tag::TYPE);
     reserve("ID", Tag::ID);
@@ -45,7 +45,6 @@ public:
     reserve('*'); reserve('/');
     reserve(';'); reserve('=');
     reserve('('); reserve(')');
-
     // Nonterminals
     reserve("Eplison", Tag::EPLISON);
     reserve("Program", Tag::PROGRAM);
@@ -57,23 +56,22 @@ public:
     reserve("Factor", Tag::FACTOR);
     reserve("ADD_ID", Tag::ADD_ID);
     reserve("ID_EXIST", Tag::ID_EXIST);
-
     // Test
     reserve("P", Tag::P);
     reserve("S", Tag::S);
     reserve("L", Tag::L);
     reserve("R", Tag::R);
-  }
+  }/*}}}*/
   ~Action() {}
 
-  bool Build(const char* grammars) {
+  bool Build(const char* grammars) {/*{{{*/
     if(!gen_action(grammars)) return false;
     message::info_action(
         unit_tags, units, products,
         items_set, actions, gotoes
         );
     return true;
-  }
+  }/*}}}*/
 
 
 private:
@@ -86,7 +84,7 @@ private:
   std::map<STATE_INPUT, State> gotoes;
 
 private:
-  void reserve(const char ch) {
+  void reserve(const char ch) {/*{{{*/
     units.insert(Unit(ch));
     unit_tags[std::string("") + ch] = ch;
   }
@@ -95,19 +93,19 @@ private:
     if(t != Tag::PROGRAM)
       units.insert(Unit(t));
     unit_tags[s] = t;
-  }
+  }/*}}}*/
 
-  int unit_tag(std::string& name) {
+  int unit_tag(std::string& name) {/*{{{*/
     return unit_tags[name];
-  }
+  }/*}}}*/
 
-  bool gen_action(const char* grammars) {
+  bool gen_action(const char* grammars) {/*{{{*/
     if(!recognize_cfg(grammars)) return false;
-    if(!gen_LR0_items()) return false;
+    if(!gen_LR0_kernel_items()) return false;
     return true;
-  }
+  }/*}}}*/
 
-  bool recognize_cfg(const char* grammars) {
+  bool recognize_cfg(const char* grammars) {/*{{{*/
     freopen(grammars, "r", stdin);
     std::string product;
     while(std::getline(std::cin, product)) {
@@ -126,10 +124,10 @@ private:
       products.push_back(prod);
     }
     return true;
-  }
+  }/*}}}*/
 
   // Run bfs to get closure of a kernel items set
-  Items* closure(Items* kernel_items) {
+  Items* closure(Items* kernel_items) {/*{{{*/
     Items *items = new Items();
     items->Set_number(kernel_items->Number());
     std::map<Item, bool> vis; // Visited or not
@@ -149,9 +147,9 @@ private:
           Q.push(New_item(prod->Number(), 0));
     }
     return items;
-  }
+  }/*}}}*/
 
-  Items* GOTO(Items *I, Unit& unit) {
+  Items* GOTO(Items *I, Unit& unit) {/*{{{*/
     Items *new_items = new Items();
     for(auto item : I->Item_set()) {
       int h = item.first, p = item.second;
@@ -164,9 +162,11 @@ private:
       return NULL;
     }
     return new_items;
-  }
+  }/*}}}*/
 
-  bool gen_LR0_items() {
+  // The calculation includes
+  // shift-actions' and GOTO-table's calculation
+  bool gen_LR0_kernel_items() {/*{{{*/
     Items *beg = new Items();
     beg->Add_item(New_item(0, 0));
     beg->Set_number(items_set.size());
@@ -193,6 +193,7 @@ private:
         }
         STATE_INPUT n_state_input
           = NEW_INPUT(I->Number(), unit.Tag()); 
+        // Generate shift-actions and GOTO-table
         if(unit.Tag() < NONTERMINAL_BEGIN) {
           actions[n_state_input]
             = std::string("S") + std::to_string(n_state);
@@ -202,7 +203,7 @@ private:
       }
     }
     return true;
-  }
+  }/*}}}*/
 
 }; // class Action
 
