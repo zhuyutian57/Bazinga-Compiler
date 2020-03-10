@@ -14,7 +14,7 @@ public:
 
   int Number() { return number; }
   int Head() { return head; }
-  const int Next_body(const int i) {
+  const int Body(const int i) {
     if(i >= bodies.size())
       return -1;
     return bodies[i];

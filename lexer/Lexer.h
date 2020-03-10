@@ -58,10 +58,10 @@ public:
   bool Build(const char* rd_path, const char* source_codes) {
     dfa->Build(rd_path);
     if(!analyze(source_codes)) {
-      message::error("Fail to build DFA!");
+      error("Fail to build DFA!");
       return false;
     }
-    message::info_lexer(words, tokens);
+    bin::info_lexer(words, tokens);
     tokens->push_back(new Unit(Tag::END));
     return true;
   }

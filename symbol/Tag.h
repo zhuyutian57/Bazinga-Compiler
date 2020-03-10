@@ -25,16 +25,9 @@ public:
   const static int END = 347;
   /* ================= Lexer ================= */
   
-  /* ================= Test ================= */
-  // Nonterminals
-  const static int
-    P = 501, S = 502, L = 503, R = 504;
-
-  /* ================= Test ================= */
-
   /* ================= Parser ================= */
   // Terminal
-  const static int EPLISON = 400;
+  const static int EPSILON = 400;
   // Nonterminals
   const static int PROGRAM = 401;
   const static int STMTS = 402, STMT = 403;
@@ -42,6 +35,13 @@ public:
   const static int UNARY = 406, FACTOR = 407;
   const static int ADD_ID = 408, ID_EXIST = 409;
   /* ================= Parser ================= */
+
+  /* ================= Test ================= */
+  // Nonterminals
+  const static int
+    P = 501, S = 502, L = 503, R = 504;
+
+  /* ================= Test ================= */
 
 }; // class Tag
 

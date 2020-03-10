@@ -17,7 +17,9 @@
 #include "Term.h"
 #include "Unary.h"
 
-#include "../message/Message.h"
+#include "../bin/Funtions.h"
+#include "../bin/Messages.h"
+using namespace bin;
 
 #ifndef _ACTION_H_
 #define _ACTION_H_
@@ -46,7 +48,7 @@ public:
     reserve(';'); reserve('=');
     reserve('('); reserve(')');
     // Nonterminals
-    reserve("Eplison", Tag::EPLISON);
+    reserve("Epsilon", Tag::EPSILON);
     reserve("Program", Tag::PROGRAM);
     reserve("Stmts", Tag::STMTS);
     reserve("Stmt", Tag::STMT);
@@ -66,19 +68,19 @@ public:
 
   bool Build(const char* grammars) {/*{{{*/
     if(!gen_action(grammars)) return false;
-    message::info_action(
+    /*info_action(
         unit_tags, units, products,
         items_set, actions, gotoes
-        );
+        );*/
     return true;
   }/*}}}*/
-
 
 private:
   std::unordered_map<std::string, int> unit_tags;
   std::set<Unit> units; // Units
+  std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
-  std::vector<Items*> items_set;
+  std::vector<Items*> items_set;  
   // Two main tables
   std::map<STATE_INPUT, ACTION> actions;
   std::map<STATE_INPUT, State> gotoes;
@@ -101,6 +103,8 @@ private:
 
   bool gen_action(const char* grammars) {/*{{{*/
     if(!recognize_cfg(grammars)) return false;
+    cal_FIRST();
+    return true;
     if(!gen_LR0_kernel_items()) return false;
     return true;
   }/*}}}*/
@@ -126,8 +130,31 @@ private:
     return true;
   }/*}}}*/
 
+  //TODO test
+  void cal_FIRST() {/*{{{*/
+    for(auto unit : units) {
+      int t = unit.Tag();
+      first[t] = new std::set<int>;
+      if(t < NONTERMINAL_BEGIN)
+        first[t]->insert(t);
+    }
+    for(bool has_move = true; has_move; ) {
+      has_move = false;
+      for(auto prod : products) {
+        int h = prod->Head();
+        for(int i = 0, b; ; i++) {
+          b = prod->Body(i);
+          int head_first_size = first[h]->size();
+          move_set2set(first[h], first[b]);
+          if(first[h]->size() != head_first_size)
+            has_move = true;
+        }
+      }
+    }
+  }/*}}}*/
+
   // Run bfs to get closure of a kernel items set
-  Items* closure(Items* kernel_items) {/*{{{*/
+  Items* CLOSURE(Items* kernel_items) {/*{{{*/
     Items *items = new Items();
     items->Set_number(kernel_items->Number());
     std::map<Item, bool> vis; // Visited or not
@@ -140,11 +167,13 @@ private:
       vis[it] = true;
       items->Add_item(it);
       int head
-        = products[it.first]->Next_body(it.second);
+        = products[it.Core().first]
+          ->Body(it.Core().second);
       if(head < NONTERMINAL_BEGIN) continue;
-      for(auto prod : products)
-        if(prod->Head() == head)
-          Q.push(New_item(prod->Number(), 0));
+      //(TODO) calculate FIRST
+      //for(auto prod : products)
+      //  if(prod->Head() == head)
+      //    Q.push(New_item(prod->Number(), 0));
     }
     return items;
   }/*}}}*/
@@ -152,10 +181,13 @@ private:
   Items* GOTO(Items *I, Unit& unit) {/*{{{*/
     Items *new_items = new Items();
     for(auto item : I->Item_set()) {
-      int h = item.first, p = item.second;
-      if(products[h]->Next_body(p) != unit.Tag())
+      int h = item.Core().first;
+      int p = item.Core().second;
+      if(products[h]->Body(p) != unit.Tag())
         continue;
-      new_items->Add_item(New_item(h, p + 1));
+      new_items->Add_item(
+          Item(std::make_pair(h, p + 1),
+            item.Lookaheads()));
     }
     if(new_items->Size() == 0) {
       delete new_items;
@@ -164,11 +196,13 @@ private:
     return new_items;
   }/*}}}*/
 
-  // The calculation includes
-  // shift-actions' and GOTO-table's calculation
+  // Including the calculationg of
+  // shift-actions and GOTO-table
   bool gen_LR0_kernel_items() {/*{{{*/
     Items *beg = new Items();
-    beg->Add_item(New_item(0, 0));
+    Item it = Item(std::make_pair(0, 0));
+    it.Add_lookahead('$');
+    beg->Add_item(it);
     beg->Set_number(items_set.size());
     items_set.push_back(beg);
 
@@ -177,7 +211,7 @@ private:
     id[*beg] = 0; Q.push(beg);
     while(!Q.empty()) {
       Items *I = Q.front(); Q.pop();
-      I = closure(I);
+      I = CLOSURE(I);
       for(auto unit : units) {
         Items *new_items = GOTO(I, unit);
         if(new_items == NULL) continue;
@@ -191,9 +225,9 @@ private:
           n_state = id[*new_items];
           delete new_items;
         }
+        // Generate shift-actions and GOTO-table
         STATE_INPUT n_state_input
           = NEW_INPUT(I->Number(), unit.Tag()); 
-        // Generate shift-actions and GOTO-table
         if(unit.Tag() < NONTERMINAL_BEGIN) {
           actions[n_state_input]
             = std::string("S") + std::to_string(n_state);

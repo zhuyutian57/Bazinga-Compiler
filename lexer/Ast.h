@@ -8,18 +8,14 @@
 
 #include "Node.h"
 
-#include "../message/Message.h"
+#include "../bin/Funtions.h"
+#include "../bin/Messages.h"
+using namespace bin;
 
 #ifndef _AST_H_
 #define _AST_H_
 
 namespace lexer {
-
-template<typename T>  
-void move_set2set(std::set<T>* in, 
-    const std::set<T>* out) {
-  for(auto e : (*out)) in->insert(e);
-}
 
 // Abstract Syntax Tree 
 class Ast {
@@ -157,7 +153,7 @@ private:
       std::string name, flag;
       ss >> name >> flag;
       if(flag != "->") {
-        message::err_rd(name, ss);
+        err_rd(name, ss);
         return false;
       }
       mpr[name] = build_subtrees(ss);
@@ -262,7 +258,7 @@ private:
         break;
       }
       case PLUS: break; //TODO add PLUS
-      default: message::error("Fail to build AST!\n");
+      default: error("Fail to build AST!\n");
     }
     return info;
   }

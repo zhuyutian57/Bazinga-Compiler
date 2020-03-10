@@ -18,7 +18,6 @@ namespace lexer {
 #define Edge std::pair<State, char>
 #define Pos_set std::set<int>
 
-//(TODO) Implememt of DFA
 // Build DFA directly from regular defination
 class Automata {
 
@@ -59,7 +58,7 @@ public:
     start = 0;
     state_size = 1;
     build_dfa(ast->Followpos());
-    message::info_automata(
+    info_automata(
         state_size, start, alphabet, acc);
   }
 

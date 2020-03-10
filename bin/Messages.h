@@ -14,7 +14,7 @@
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
 
-namespace message {
+namespace bin {
 
   void error(const std::string& mes) {
     std:: cout << mes << '\n';
@@ -88,7 +88,7 @@ namespace message {
     for(auto prod : products) {
       std::cout << "    " << prod->Number() << " : ";
       std::cout << mp[prod->Head()] << " ->";
-      for(int i = 0, j; j = prod->Next_body(i) ;i++) {
+      for(int i = 0, j; j = prod->Body(i) ;i++) {
         if(j == -1) break;
         std::cout << ' ' << mp[j];
       }
@@ -99,9 +99,12 @@ namespace message {
       std::cout << " -Items " << items->Number();
       std::cout << " - " << items->Size() << " item-s\n";
       std::cout << " - kernel item:\n";
-      for(auto item : items->Item_set())
+      for(auto item : items->Item_set()) {
         std::cout << " - "
-          << item.first << ' ' << item.second << '\n'; 
+          << item.Core().first << ' ' << item.Core().second << " ,";
+        for(auto lok : item.Lookaheads())
+          std::cout << ' ' << mp[lok];
+      }
       std::cout << " - actions & gotoes:\n";
       for(auto unit : units) {
         std::pair<int, int> si
