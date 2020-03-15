@@ -67,7 +67,7 @@ public:
   }
 
   // Return a word everytime
-  void* Next_word() {return (*tokens)[cur++]; }
+  void* Next_word() { return (*tokens)[cur++]; }
 
 private:
   Automata *dfa;
@@ -88,7 +88,7 @@ private:
 
   void add_new_word(const std::string& word) {
     if(word[0] >= '0' && word[0] <= '9') {
-      if(word.find('.') == std::string::npos) {
+      if(word.find('.') != std::string::npos) {
         reserve(new Float(word));
       } else {
         reserve(new Integer(word));
