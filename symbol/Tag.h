@@ -1,16 +1,11 @@
 
-#ifndef _TAG_H_
-#define _TAG_H_
+#ifndef _TAG_NAMESPACE_
+#define _TAG_NAMESPACE_
 
 namespace symbol {
 
-class Tag {
+namespace Tag {
 
-/* Encode the unite of token's sorts
- * */
-
-public:
-  
   /* ================= Lexer ================= */
   // Types - int, float
   const static int TYPE = 300;
@@ -43,7 +38,7 @@ public:
 
   /* ================= Test ================= */
 
-}; // class Tag
+} // namespace Tag
 
 } // namespace symbol
 
