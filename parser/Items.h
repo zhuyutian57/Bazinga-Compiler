@@ -7,39 +7,12 @@
 
 namespace parser {
 
-class Item {
-
-public:
-  Item(){}
-  Item(const std::pair<int, int>& c) { core = c; }
-  Item(const std::pair<int, int>& c,
-      const std::set<int>& loks) {
-    core = c;
-    lookaheads = loks;
-  }
-  ~Item(){}
-  bool operator==(const Item& it) const {
-    return core == it.core;
-  }
-  bool operator<(const Item& it) const {
-    return core < it.core;
-  }
-
-  void Set_core(const std::pair<int, int>& c) {
-    core = c;
-  }
-  void Add_lookahead(const int& lok) {
-    lookaheads.insert(lok);
-  }
-
-  const std::pair<int, int>& Core() { return core; }
-  const std::set<int>& Lookaheads() { return lookaheads; }
-
-private:
-  std::pair<int, int> core;
-  std::set<int> lookaheads;
-
-}; // class Item
+#define Kernel std::pair<int, int>
+#define Item std::pair<Kernel, int>
+#define NEW_ITEM(p, b, l) std::make_pair(std::make_pair(p, b), l)
+#define Lok int
+#define Core first
+#define Lookahead second
 
 class Items {
 
@@ -61,14 +34,27 @@ public:
   }
   void Add_item(const Item& it) {
     items.insert(it);
+    cores.insert(it.Core);
   }
   const std::set<Item>& Item_set() {
     return items;
   }
+  const std::set<Kernel>& Cores() {
+    return cores;
+  }
+
+  struct Core_cmp {
+    bool operator()(
+        const Items& items1,
+        const Items& items2) {
+      return items1.cores < items2.cores;
+    }
+  };
 
 private:
   int number;
   std::set<Item> items;
+  std::set<Kernel> cores;
 
 }; // class Item
 
