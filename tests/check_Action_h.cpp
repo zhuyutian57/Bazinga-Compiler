@@ -25,7 +25,6 @@ const int INF = 1 << 30;
 const double eps = 1e-6;
 const int mod = 1000000007;
 
-#include <unordered_map>
 #include "../parser/Action.h"
 
 int main() {
@@ -37,3 +36,11 @@ int main() {
   
 	return 0;
 }
+/*
+P -> S
+S -> L = R
+S -> R
+L -> * R
+L -> ID
+R -> L
+ * */
