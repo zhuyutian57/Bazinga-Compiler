@@ -16,6 +16,7 @@
 #include "Stmts.h"
 #include "Term.h"
 #include "Unary.h"
+#include "Units.h"
 
 #include "../bin/Funtions.h"
 #include "../bin/Messages.h"
@@ -26,86 +27,40 @@ using namespace bin;
 
 namespace parser {
 
-#define State int
-#define ACTION std::string
-#define INPUT int
-#define NONTERMINAL int
-#define STATE_INPUT std::pair<State, INPUT>
-#define NEW_INPUT(s, i) std::make_pair(s, i)
-#define NONTERMINAL_BEGIN 401
+#define ACTION std::vector<std::string>
+#define NEW_ACTION ACTION(units_ptr->Units_size())
 
 class Action {
 
 public:
   Action() {/*{{{*/
-    // Terminals
-    reserve("TYPE", Tag::TYPE);
-    reserve("ID", Tag::ID);
-    reserve("INTEGER", Tag::INTEGER);
-    reserve("FLOAT", Tag::FLOAT);
-    reserve('+'); reserve('-');
-    reserve('*'); reserve('/');
-    reserve(';'); reserve('=');
-    reserve('('); reserve(')');
-    // Nonterminals
-    reserve("Epsilon", Tag::EPSILON);
-    reserve("Program", Tag::PROGRAM);
-    reserve("Stmts", Tag::STMTS);
-    reserve("Stmt", Tag::STMT);
-    reserve("Expr", Tag::EXPR);
-    reserve("Term", Tag::TERM);
-    reserve("Unary", Tag::UNARY);
-    reserve("Factor", Tag::FACTOR);
-    reserve("ADD_ID", Tag::ADD_ID);
-    reserve("ID_EXIST", Tag::ID_EXIST);
-    // Test
-    reserve("P", Tag::P);
-    reserve("S", Tag::S);
-    reserve("L", Tag::L);
-    reserve("R", Tag::R);
+    units_ptr = new Units();
+  }
+  ~Action() {
+    delete units_ptr;
   }/*}}}*/
-  ~Action() {}
 
   bool Build(const char* grammars) {/*{{{*/
     if(!gen_action(grammars)) return false;
-    /*info_action(
-        unit_tags, units, products,
-        items_set, actions, gotoes
-        );*/
+    info_action(first, products, items_set, actions);
     return true;
   }/*}}}*/
 
 private:
-  std::unordered_map<std::string, int> unit_tags;
-  std::set<Unit> units; // Units
+  Units* units_ptr;
   std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
   std::vector<Items*> items_set;  
-  // Two main tables
-  std::map<STATE_INPUT, ACTION> actions;
-  std::map<STATE_INPUT, State> gotoes;
+  // ACTIONs and GOTOs
+  std::vector<ACTION> actions;
 
 private:
-  void reserve(const char ch) {/*{{{*/
-    units.insert(Unit(ch));
-    unit_tags[std::string("") + ch] = ch;
-  }
-
-  void reserve(const std::string& s, int t) {
-    if(t != Tag::PROGRAM)
-      units.insert(Unit(t));
-    unit_tags[s] = t;
-  }/*}}}*/
-
-  int unit_tag(std::string& name) {/*{{{*/
-    return unit_tags[name];
-  }/*}}}*/
 
   bool gen_action(const char* grammars) {/*{{{*/
     if(!recognize_cfg(grammars)) return false;
-    cal_FIRST();
-    return true;
-    if(!gen_LR0_kernel_items()) return false;
+    FIRST_of_units();
+    if(!gen_LALR1_kernel_items()) return false;
+    if(!gen_reduce_actions()) return false;
     return true;
   }/*}}}*/
 
@@ -119,20 +74,19 @@ private:
       Product *prod = new Product();
       std::string word;
       ss >> word;
-      prod->Set_head(unit_tag(word));
+      prod->Set_head((*units_ptr)[word]);
       ss >> word;
       if(word != "->") return false;
       while(ss >> word)
-        prod->Add_body(unit_tag(word));
+        prod->Add_body((*units_ptr)[word]);
       prod->Set_number(products.size());
       products.push_back(prod);
     }
     return true;
   }/*}}}*/
 
-  //TODO test
-  void cal_FIRST() {/*{{{*/
-    for(auto unit : units) {
+  void FIRST_of_units() {/*{{{*/
+    for(auto unit : units_ptr->Unitset()) {
       int t = unit.Tag();
       first[t] = new std::set<int>;
       if(t < NONTERMINAL_BEGIN)
@@ -144,13 +98,44 @@ private:
         int h = prod->Head();
         for(int i = 0, b; ; i++) {
           b = prod->Body(i);
+          if(b == -1) break;
           int head_first_size = first[h]->size();
           move_set2set(first[h], first[b]);
           if(first[h]->size() != head_first_size)
             has_move = true;
+          if(first[b]->find(Tag::EPSILON)
+              == first[b]->end())
+            break;
         }
       }
     }
+  }/*}}}*/
+
+  // Calculate FIRST(βa)
+  std::set<Lok>* FIRST(/*{{{*/
+      const std::vector<Lok>& beta,
+      const Lok& a) {
+    std::set<Lok>* loks = new std::set<Lok>;
+    bool eps = true;
+    for(auto unit : beta) {
+      for(auto u : (*first[unit]))
+        if(u != Tag::EPSILON)
+          loks->insert(u);
+      if(first[unit]->find(Tag::EPSILON)
+          == first[unit]->end()) {
+        eps = false; break;
+      }
+    }
+    if(eps) loks->insert(a);
+    return loks;
+  }
+  std::set<Lok>* FIRST(Item& it) {
+    std::vector<Lok> beta;
+    int h = it.Core.first;
+    int b = it.Core.second + 1;
+    while(products[h]->Body(b) != -1)
+      beta.push_back(products[h]->Body(b++));
+    return FIRST(beta, it.Lookahead);
   }/*}}}*/
 
   // Run bfs to get closure of a kernel items set
@@ -167,13 +152,15 @@ private:
       vis[it] = true;
       items->Add_item(it);
       int head
-        = products[it.Core().first]
-          ->Body(it.Core().second);
+        = products[it.Core.first]
+          ->Body(it.Core.second);
       if(head < NONTERMINAL_BEGIN) continue;
-      //(TODO) calculate FIRST
-      //for(auto prod : products)
-      //  if(prod->Head() == head)
-      //    Q.push(New_item(prod->Number(), 0));
+      std::set<int>* loks = FIRST(it);
+      for(auto prod : products)
+        if(prod->Head() == head)
+          for(auto lo : *loks)
+            Q.push(NEW_ITEM(prod->Number(), 0, lo));
+      delete loks;
     }
     return items;
   }/*}}}*/
@@ -181,13 +168,12 @@ private:
   Items* GOTO(Items *I, Unit& unit) {/*{{{*/
     Items *new_items = new Items();
     for(auto item : I->Item_set()) {
-      int h = item.Core().first;
-      int p = item.Core().second;
-      if(products[h]->Body(p) != unit.Tag())
+      int h = item.Core.first;
+      int b = item.Core.second;
+      if(products[h]->Body(b) != unit.Tag())
         continue;
-      new_items->Add_item(
-          Item(std::make_pair(h, p + 1),
-            item.Lookaheads()));
+      new_items->Add_item(NEW_ITEM(h, b + 1,
+            item.Lookahead));
     }
     if(new_items->Size() == 0) {
       delete new_items;
@@ -198,44 +184,46 @@ private:
 
   // Including the calculationg of
   // shift-actions and GOTO-table
-  bool gen_LR0_kernel_items() {/*{{{*/
+  bool gen_LALR1_kernel_items() {/*{{{*/
     Items *beg = new Items();
-    Item it = Item(std::make_pair(0, 0));
-    it.Add_lookahead('$');
-    beg->Add_item(it);
+    beg->Add_item(std::make_pair(
+          std::make_pair(0, 0), '$'));
     beg->Set_number(items_set.size());
+    actions.push_back(NEW_ACTION);
     items_set.push_back(beg);
 
-    std::map<Items, int> id;
+    std::map<Items, int, Items::Core_cmp> number;
     std::queue<Items*> Q;
-    id[*beg] = 0; Q.push(beg);
+    number[*beg] = 0; Q.push(beg);
     while(!Q.empty()) {
       Items *I = Q.front(); Q.pop();
       I = CLOSURE(I);
-      for(auto unit : units) {
+      for(auto unit : units_ptr->Unitset()) {
         Items *new_items = GOTO(I, unit);
         if(new_items == NULL) continue;
         int n_state; // GOTO(I, Unit) = n_state
-        if(id.find(*new_items) == id.end()) {
-          n_state = id[*new_items] = items_set.size();
+        if(number.find(*new_items) == number.end()) {
+          n_state = number[*new_items] = items_set.size();
           new_items->Set_number(n_state);
           items_set.push_back(new_items);
+          actions.push_back(NEW_ACTION);
           Q.push(new_items);
         } else {
-          n_state = id[*new_items];
+          n_state = number[*new_items];
           delete new_items;
         }
         // Generate shift-actions and GOTO-table
-        STATE_INPUT n_state_input
-          = NEW_INPUT(I->Number(), unit.Tag()); 
-        if(unit.Tag() < NONTERMINAL_BEGIN) {
-          actions[n_state_input]
-            = std::string("S") + std::to_string(n_state);
-        } else {
-          gotoes[n_state_input] = n_state;
-        }
+        std::string act = "";
+        if(unit.Tag() < NONTERMINAL_BEGIN) act = "S";
+        actions[n_state][units_ptr->Loc(unit.Tag())]
+            = act + std::to_string(n_state);
       }
     }
+    return true;
+  }/*}}}*/
+
+  //TODO add
+  bool gen_reduce_actions() {/*{{{*/
     return true;
   }/*}}}*/
 

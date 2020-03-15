@@ -10,6 +10,7 @@
 #include "../lexer/Word.h"
 #include "../parser/Items.h"
 #include "../parser/Product.h"
+#include "../parser/Units.h"
 
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
@@ -74,15 +75,11 @@ namespace bin {
   }
 
   void info_action(
-    const std::unordered_map<std::string, int>& unit_tags,
-    const std::set<Unit>& units,
+    const std::unordered_map<int, std::set<int>*> first,
     const std::vector<parser::Product*>& products,
     const std::vector<parser::Items*>& items_set,
-    const std::map<std::pair<int, int>, std::string>& actions,
-    const std::map<std::pair<int, int>, int>& gotoes) {
-    std::unordered_map<int, std::string> mp;
-    for(auto p : unit_tags)
-      mp[p.second] = p.first;
+    const std::vector<std::vector<std::string> >& actions) {
+    parser::Units mp;
     std::cout << " ============= ACTIONS =============\n";
     std::cout << " Products :\n";
     for(auto prod : products) {
@@ -95,28 +92,33 @@ namespace bin {
       std::cout << '\n';
     }
     std::cout << '\n';
+    std::cout << " -FIRST set:\n";
+    for(auto f : first) {
+      if(f.second->size() == 0) continue;
+      std::cout << " - "<< mp[f.first] << " :";
+      for(auto tag : (*f.second))
+        std::cout << ' ' << mp[tag];
+      std::cout << '\n';
+    }
+    std::cout << '\n';
     for(auto items : items_set) {
       std::cout << " -Items " << items->Number();
       std::cout << " - " << items->Size() << " item-s\n";
       std::cout << " - kernel item:\n";
       for(auto item : items->Item_set()) {
         std::cout << " - "
-          << item.Core().first << ' ' << item.Core().second << " ,";
-        for(auto lok : item.Lookaheads())
-          std::cout << ' ' << mp[lok];
+          << item.Core.first << ' '
+          << item.Core.second << " , "
+          << mp[item.Lookahead];
+        std::cout << '\n';
       }
       std::cout << " - actions & gotoes:\n";
-      for(auto unit : units) {
-        std::pair<int, int> si
-          = std::make_pair(items->Number(), unit.Tag());
-        if(actions.find(si) != actions.end()) {
-          std::cout << " - "<< mp[unit.Tag()]
-            << "-" << actions.find(si)->second << '\n';
-        }
-        if(gotoes.find(si) != gotoes.end()) {
-          std::cout << " - " << mp[unit.Tag()]
-            << "-" << gotoes.find(si)->second << '\n';
-        }
+      int state = items->Number();
+      for(auto unit : mp.Unitset()) {
+        int lo = mp.Loc(unit.Tag());
+        if(actions[state][lo] != "")
+          std::cout << " - " << mp[unit.Tag()] << ' '
+            << actions[state][lo] << '\n';
       }
       std::cout << '\n';
     }
