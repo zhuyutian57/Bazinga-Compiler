@@ -27,8 +27,10 @@ using namespace bin;
 
 namespace parser {
 
+#define State int
+#define ACTION_ERROR "ERROR"
 #define ACTION std::vector<std::string>
-#define NEW_ACTION ACTION(units_ptr->Units_size())
+#define NEW_ACTION ACTION(units_ptr->Units_size(), ACTION_ERROR)
 
 class Action {
 
@@ -182,6 +184,26 @@ private:
     return new_items;
   }/*}}}*/
 
+  inline bool placed(const State& i, const Lok& lok) {/*{{{*/
+    return actions[i][lok] != ACTION_ERROR;
+  }/*}}}*/
+
+  inline bool gen_shift_and_goto(/*{{{*/
+      const State& out,
+      const int& unit_tag,
+      const State& in) {
+    int lok = units_ptr->Loc(unit_tag);
+    if(placed(out, lok)) {
+      error("Shift conflict : " + std::to_string(out)
+          + " - " + (*units_ptr)[unit_tag]);
+      return false;
+    }
+    std::string act = "";
+    if(unit_tag < NONTERMINAL_BEGIN) act = "S";
+    actions[out][lok] = act + std::to_string(in);
+    return true;
+  }/*}}}*/
+
   // Including the calculationg of
   // shift-actions and GOTO-table
   bool gen_LALR1_kernel_items() {/*{{{*/
@@ -191,8 +213,8 @@ private:
     beg->Set_number(items_set.size());
     actions.push_back(NEW_ACTION);
     items_set.push_back(beg);
-
-    std::map<Items, int, Items::Core_cmp> number;
+    // Run bfs to calculate items
+    std::map<Items, State, Items::Core_cmp> number;
     std::queue<Items*> Q;
     number[*beg] = 0; Q.push(beg);
     while(!Q.empty()) {
@@ -212,18 +234,31 @@ private:
           n_state = number[*new_items];
           delete new_items;
         }
-        // Generate shift-actions and GOTO-table
-        std::string act = "";
-        if(unit.Tag() < NONTERMINAL_BEGIN) act = "S";
-        actions[n_state][units_ptr->Loc(unit.Tag())]
-            = act + std::to_string(n_state);
+        if(!gen_shift_and_goto(I->Number(), unit.Tag(), n_state))
+          return false;
       }
     }
     return true;
   }/*}}}*/
 
-  //TODO add
+  inline bool reduce_item(const Kernel& core) {/*{{{*/
+    return products[core.first]->Body(core.second) == -1;
+  }/*}}}*/
+
   bool gen_reduce_actions() {/*{{{*/
+    for(auto I : items_set) {
+      const int& i = I->Number();
+      for(auto it : I->Item_set()) {
+        if(!reduce_item(it.Core)) continue;
+        if(placed(i, units_ptr->Loc(it.Lookahead))) {
+          error("Reduce conflict :" + std::to_string(i)
+              + " - " + (*units_ptr)[it.Lookahead]);
+          return false;
+        }
+        actions[i][units_ptr->Loc(it.Lookahead)] =
+          "R" + std::to_string(it.Core.first);
+      }
+    }
     return true;
   }/*}}}*/
 
