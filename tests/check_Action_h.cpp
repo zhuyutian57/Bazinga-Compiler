@@ -30,17 +30,17 @@ const int mod = 1000000007;
 int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
-	const char *g_path = "../parser/grammars/test.cfg";
+	const char *g_path = "../parser/grammars/grammars.cfg";
   parser::Action *ac_table = new parser::Action();
   cout << ac_table->Build(g_path) << endl;
   
 	return 0;
 }
 /*
-P -> S
-S -> L = R
-S -> R
-L -> * R
-L -> ID
-R -> L
+0. P -> S
+1. S -> L = R
+2. S -> R
+3. L -> * R
+4. L -> ID
+5. R -> L
  * */

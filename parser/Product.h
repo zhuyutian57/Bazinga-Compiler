@@ -20,13 +20,9 @@ public:
     return bodies[i];
   }
 
-  void Set_number(const int num) {
-    number = num;
-  }
+  void Set_number(const int num) { number = num; }
   void Set_head(const int h) { head = h; }
-  void Add_body(const int b) {
-    bodies.push_back(b);
-  }
+  void Add_body(const int b) { bodies.push_back(b); }
 
 private:
   int number;

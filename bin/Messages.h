@@ -17,21 +17,21 @@
 
 namespace bin {
 
-  void error(const std::string& mes) {
+  inline void error(const std::string& mes) {/*{{{*/
     std:: cout << mes << '\n';
-  }
+  }/*}}}*/
 
   // Wrong regular defination
-  void err_rd(
+  inline void err_rd(/*{{{*/
     const std::string& name,
     std::istringstream& ss) {
     std::cout<< name << " ->";
     std::string x;
     while(ss >> x) std::cout << " " + x;
     std::cout << " is not a regular defination\n";
-  }
+  }/*}}}*/
   
-  void info_automata(
+  void info_automata(/*{{{*/
     int state_size,
     int start,
     const std::set<char>* alphabet,
@@ -47,9 +47,9 @@ namespace bin {
     for(auto s : *acc) std::cout << ' ' << s;
     std::cout << '\n';
     std::cout << "============= DFA =============\n";
-  }
+  }/*}}}*/
 
-  void info_lexer(
+  void info_lexer(/*{{{*/
     std::unordered_map<std::string, void*>* words,
     const std::vector<void*>* tokens) {
     std::cout << " Token stream : \n";
@@ -72,7 +72,7 @@ namespace bin {
                   << ">\n";
       }
     }
-  }
+  }/*}}}*/
 
   void info_action(
     const std::unordered_map<int, std::set<int>*> first,
@@ -92,7 +92,7 @@ namespace bin {
       std::cout << '\n';
     }
     std::cout << '\n';
-    std::cout << " -FIRST set:\n";
+    std::cout << " - FIRST set:\n";
     for(auto f : first) {
       if(f.second->size() == 0) continue;
       std::cout << " - "<< mp[f.first] << " :";
@@ -102,7 +102,7 @@ namespace bin {
     }
     std::cout << '\n';
     for(auto items : items_set) {
-      std::cout << " -Items " << items->Number();
+      std::cout << " - Items " << items->Number();
       std::cout << " - " << items->Size() << " item-s\n";
       std::cout << " - kernel item:\n";
       for(auto item : items->Item_set()) {
@@ -116,7 +116,7 @@ namespace bin {
       int state = items->Number();
       for(auto unit : mp.Unitset()) {
         int lo = mp.Loc(unit.Tag());
-        if(actions[state][lo] != "")
+        if(actions[state][lo] != "ERROR")
           std::cout << " - " << mp[unit.Tag()] << ' '
             << actions[state][lo] << '\n';
       }

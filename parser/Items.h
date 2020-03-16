@@ -26,7 +26,7 @@ public:
     return items < it.items;
   }
 
-  int Number() { return number; }
+  const int& Number() { return number; }
   const int Size() { return items.size(); }
 
   void Set_number(const int num) {
@@ -42,7 +42,7 @@ public:
   const std::set<Kernel>& Cores() {
     return cores;
   }
-
+  
   struct Core_cmp {
     bool operator()(
         const Items& items1,
