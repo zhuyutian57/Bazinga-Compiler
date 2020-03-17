@@ -29,8 +29,8 @@ namespace parser {
 
 #define State int
 #define ACTION_ERROR "ERROR"
-#define ACTION std::vector<std::string>
-#define NEW_ACTION ACTION(units_ptr->Units_size(), ACTION_ERROR)
+#define ACTION_SET std::vector<std::string>
+#define NEW_ACTION ACTION_SET(units_ptr->Units_size(), ACTION_ERROR)
 
 class Action {
 
@@ -48,13 +48,18 @@ public:
     return true;
   }/*}}}*/
 
+  const inline std::string& ACTION(
+      const State& s, const Lok& lok) {
+    return actions[s][units_ptr->Loc(lok)];
+  }
+
 private:
   Units* units_ptr;
   std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
   std::vector<Items*> items_set;  
   // ACTIONs and GOTOs
-  std::vector<ACTION> actions;
+  std::vector<ACTION_SET> actions;
 
 private:
 
