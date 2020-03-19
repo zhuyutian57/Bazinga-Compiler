@@ -17,7 +17,7 @@ namespace lexer {
 class Lexer {
 
 private:
-  struct Buf {
+  struct Buf {/*{{{*/
     int cur;
     std::vector<char> chv;
     Buf(const char* path) : cur(0) {
@@ -36,10 +36,10 @@ private:
       while(count--) s += chv[beg++];
       return s;
     }
-  }; // struct Buf
+  }; // struct Buf}}}
 
 public:
-  Lexer() : cur(0) {
+  Lexer() : cur(0) {/*{{{*/
     dfa = new Automata();
     words = new std::unordered_map<std::string, void*>;
     tokens = new std::vector<void*>;
@@ -53,18 +53,22 @@ public:
   }
   ~Lexer() {
     delete words, tokens;
-  }
+  }/*}}}*/
 
-  bool Build(const char* rd_path, const char* source_codes) {
+  bool Build(const char* rd_path) {/*{{{*/
     dfa->Build(rd_path);
+    tokens->push_back(new Unit(Tag::END));
+    return true;
+  }/*}}}*/
+
+  bool Analyze(const char* source_codes) {/*{{{*/
     if(!analyze(source_codes)) {
       error("Fail to build DFA!");
       return false;
     }
     bin::info_lexer(words, tokens);
-    tokens->push_back(new Unit(Tag::END));
     return true;
-  }
+  }/*}}}*/
 
   // Return a word everytime
   void* Next_word() { return (*tokens)[cur++]; }
@@ -78,13 +82,12 @@ private:
 
 private:
 
-  void reserve(const Unit* t) {
+  inline void reserve(const Unit* t) {/*{{{*/
     (*words)[std::string(1, t->Tag())] = (void*)t;
   }
-
-  void reserve(const Word* w) {
+  inline void reserve(const Word* w) {
     (*words)[w->Lexe()] = (void*)w;
-  }
+  }/*}}}*/
 
   void add_new_word(const std::string& word) {
     if(word[0] >= '0' && word[0] <= '9') {
