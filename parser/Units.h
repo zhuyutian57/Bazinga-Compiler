@@ -17,7 +17,7 @@ namespace parser {
 class Units {
 
 public:
-  Units() {
+  Units() : index(0) {
     // Terminals
     reserve("TYPE", Tag::TYPE);
     reserve("ID", Tag::ID);
@@ -40,10 +40,10 @@ public:
     reserve("ADD_ID", Tag::ADD_ID);
     reserve("ID_EXIST", Tag::ID_EXIST);
     // Test
-    reserve("P", Tag::P);
-    reserve("S", Tag::S);
-    reserve("L", Tag::L);
-    reserve("R", Tag::R);
+    //reserve("P", Tag::P);
+    //reserve("S", Tag::S);
+    //reserve("L", Tag::L);
+    //reserve("R", Tag::R);
   }
   ~Units(){}
 
@@ -60,23 +60,23 @@ public:
 
 private:
   std::vector<Unit> unitset;
+  int index;
   std::unordered_map<int, int> pos;
   std::unordered_map<int, std::string> tag_to_str;
   std::unordered_map<std::string, int> str_to_tag;
 
 private:
-  void reserve(const char ch) {/*{{{*/
-    pos[int(ch)] = unitset.size();
-    unitset.push_back(Unit(ch));
-    tag_to_str[int(ch)] = std::string("") + ch;
-    str_to_tag[std::string("") + ch] = int(ch);
+   void reserve(const std::string& s, int t) {/*{{{*/
+     if(t != Tag::PROGRAM && t != Tag::EPSILON)
+       pos[t] = index++;
+     unitset.push_back(Unit(t));
+     tag_to_str[t] = s;
+     str_to_tag[s] = t;
   }
-  void reserve(const std::string& s, int t) {
-    pos[t] = unitset.size();
-    unitset.push_back(Unit(t));
-    tag_to_str[t] = s;
-    str_to_tag[s] = t;
+  void reserve(const char ch) {
+    reserve(std::string("") + ch, ch);
   }/*}}}*/
+
 
 }; // class Units
 
