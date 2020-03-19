@@ -17,7 +17,7 @@ namespace Tag {
   const static int INTEGER = 302, FLOAT = 303;
 
   // End flog
-  const static int END = 347;
+  const static int END = '$';
   /* ================= Lexer ================= */
   
   /* ================= Parser ================= */
