@@ -27,13 +27,35 @@ const int mod = 1000000007;
 
 #include "../parser/Action.h"
 
+#define FORMAT cout.width(8),cout.setf(ios::left)
+
 int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
-	const char *g_path = "../parser/grammars/grammars.cfg";
+	const char *g_path = "../grammars/grammars.cfg";
   parser::Action *ac_table = new parser::Action();
   cout << ac_table->Build(g_path) << endl;
-  
+  parser::Units* uptr = ac_table->Units_ptr();
+  vector<std::vector<std::string> >& acv = 
+    ac_table->Actions();
+  FORMAT;
+  cout << "State";
+  for(auto unit : uptr->Unitset()) {
+    FORMAT;
+    cout << (*uptr)[unit.Tag()];
+  }
+  cout << '\n';
+  int number = 0;
+  for(auto ac : acv) {
+    FORMAT;
+    cout << number++;
+    for(auto s : ac) {
+      FORMAT;
+      if(s != "ERROR") cout << s;
+      else cout << "-";
+    }
+    cout << '\n';
+  } 
 	return 0;
 }
 /*
