@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../lexer/Word.h"
-#include "../parser/Items.h"
+#include "../parser/Itemset.h"
 #include "../parser/Product.h"
 #include "../parser/Units.h"
 
@@ -30,7 +30,8 @@ namespace bin {
     while(ss >> x) std::cout << " " + x;
     std::cout << " is not a regular defination\n";
   }/*}}}*/
-  
+
+  //TODO save informations in files
   void info_automata(/*{{{*/
     int state_size,
     int start,
@@ -74,10 +75,10 @@ namespace bin {
     }
   }/*}}}*/
 
-  void info_action(
+  void info_action(/*{{{*/
     const std::unordered_map<int, std::set<int>*> first,
     const std::vector<parser::Product*>& products,
-    const std::vector<parser::Items*>& items_set,
+    const std::vector<parser::Itemset*>& itemset,
     const std::vector<std::vector<std::string> >& actions) {
     parser::Units mp;
     std::cout << " ============= ACTIONS =============\n";
@@ -101,11 +102,11 @@ namespace bin {
       std::cout << '\n';
     }
     std::cout << '\n';
-    for(auto items : items_set) {
-      std::cout << " - Items " << items->Number();
+    for(auto items : itemset) {
+      std::cout << " - Itemset " << items->Number();
       std::cout << " - " << items->Size() << " item-s\n";
       std::cout << " - kernel item:\n";
-      for(auto item : items->Item_set()) {
+      for(auto item : items->Items()) {
         std::cout << " - "
           << item.Core.first << ' '
           << item.Core.second << " , "
@@ -123,7 +124,7 @@ namespace bin {
       std::cout << '\n';
     }
     std::cout << " ============= ACTIONS =============\n";
-  }
+  }/*}}}*/
 
 } // namespace message
 

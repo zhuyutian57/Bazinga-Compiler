@@ -10,7 +10,7 @@
 
 #include "Expr.h"
 #include "Factor.h"
-#include "Items.h"
+#include "Itemset.h"
 #include "Product.h"
 #include "Stmt.h"
 #include "Stmts.h"
@@ -44,7 +44,7 @@ public:
 
   bool Build(const char* grammars) {/*{{{*/
     if(!gen_action(grammars)) return false;
-    info_action(first, products, items_set, actions);
+    info_action(first, products, itemsets, actions);
     return true;
   }/*}}}*/
 
@@ -53,11 +53,17 @@ public:
     return actions[s][units_ptr->Loc(lok)];
   }
 
+  //Test
+  Units* Units_ptr() { return units_ptr; }
+  std::vector<ACTION_SET>& Actions() {
+    return actions;
+  }
+
 private:
   Units* units_ptr;
   std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
-  std::vector<Items*> items_set;  
+  std::vector<Itemset*> itemsets;  
   // ACTIONs and GOTOs
   std::vector<ACTION_SET> actions;
 
@@ -66,7 +72,8 @@ private:
   bool gen_action(const char* grammars) {/*{{{*/
     if(!recognize_cfg(grammars)) return false;
     FIRST_of_units();
-    if(!gen_LALR1_kernel_items()) return false;
+    if(!gen_LR1_itemsets()) return false;
+    remove_nonkernel_item();
     if(!gen_reduce_actions()) return false;
     return true;
   }/*}}}*/
@@ -138,29 +145,27 @@ private:
   }
   std::set<Lok>* FIRST(Item& it) {
     std::vector<Lok> beta;
-    int h = it.Core.first;
-    int b = it.Core.second + 1;
+    int h = it.PRODUCT_ID;
+    int b = it.DOT + 1;
     while(products[h]->Body(b) != -1)
       beta.push_back(products[h]->Body(b++));
     return FIRST(beta, it.Lookahead);
   }/*}}}*/
 
-  // Run bfs to get closure of a kernel items set
-  Items* CLOSURE(Items* kernel_items) {/*{{{*/
-    Items *items = new Items();
-    items->Set_number(kernel_items->Number());
+  // Run bfs to get closure of a kernel itemset
+  Itemset* CLOSURE(Itemset* kernel_itemset) {/*{{{*/
+    Itemset *its = new Itemset();
+    its->Set_number(kernel_itemset->Number());
     std::map<Item, bool> vis; // Visited or not
     std::queue<Item> Q;
-    for(auto item : kernel_items->Item_set())
+    for(auto item : kernel_itemset->Items())
       Q.push(item);
     while(!Q.empty()) {
       Item it = Q.front(); Q.pop();
       if(vis[it]) continue;
       vis[it] = true;
-      items->Add_item(it);
-      int head
-        = products[it.Core.first]
-          ->Body(it.Core.second);
+      its->Add_item(it);
+      int head = products[it.PRODUCT_ID]->Body(it.DOT);
       if(head < NONTERMINAL_BEGIN) continue;
       std::set<int>* loks = FIRST(it);
       for(auto prod : products)
@@ -169,24 +174,24 @@ private:
             Q.push(NEW_ITEM(prod->Number(), 0, lo));
       delete loks;
     }
-    return items;
+    return its;
   }/*}}}*/
 
-  Items* GOTO(Items *I, Unit& unit) {/*{{{*/
-    Items *new_items = new Items();
-    for(auto item : I->Item_set()) {
-      int h = item.Core.first;
-      int b = item.Core.second;
+  Itemset* GOTO(Itemset *I, Unit& unit) {/*{{{*/
+    Itemset *new_kernel_itemset = new Itemset();
+    for(auto item : I->Items()) {
+      int h = item.PRODUCT_ID;
+      int b = item.DOT;
       if(products[h]->Body(b) != unit.Tag())
         continue;
-      new_items->Add_item(NEW_ITEM(h, b + 1,
-            item.Lookahead));
+      new_kernel_itemset->Add_item(
+          NEW_ITEM(h, b + 1, item.Lookahead));
     }
-    if(new_items->Size() == 0) {
-      delete new_items;
-      return NULL;
-    }
-    return new_items;
+    Itemset *result = NULL;
+    if(new_kernel_itemset->Size() != 0)
+      result = CLOSURE(new_kernel_itemset);
+    delete new_kernel_itemset;
+    return result;
   }/*}}}*/
 
   inline bool placed(const State& i, const Lok& lok) {/*{{{*/
@@ -209,35 +214,42 @@ private:
     return true;
   }/*}}}*/
 
-  // Including the calculationg of
-  // shift-actions and GOTO-table
-  bool gen_LALR1_kernel_items() {/*{{{*/
-    Items *beg = new Items();
+  void init_item_zero() {/*{{{*/
+    Itemset *beg = new Itemset();
     beg->Add_item(std::make_pair(
           std::make_pair(0, 0), '$'));
-    beg->Set_number(items_set.size());
+    beg->Set_number(itemsets.size());
     actions.push_back(NEW_ACTION);
-    items_set.push_back(beg);
-    // Run bfs to calculate items
-    std::map<Items, State, Items::Core_cmp> number;
-    std::queue<Items*> Q;
-    number[*beg] = 0; Q.push(beg);
+    itemsets.push_back(CLOSURE(beg));
+    delete beg;
+  }/*}}}*/
+
+  // Run bfs to calculate itemsets
+  // Extra: calculating shift-actions and GOTOs
+  bool gen_LR1_itemsets() {/*{{{*/
+    init_item_zero();
+    std::map<Itemset, State, Itemset::Core_cmp> number;
+    std::queue<Itemset*> Q;
+    Q.push(itemsets[0]);
+    number[(*Q.front())] = 0;
     while(!Q.empty()) {
-      Items *I = Q.front(); Q.pop();
-      I = CLOSURE(I);
+      Itemset *I = Q.front(); Q.pop();
       for(auto unit : units_ptr->Unitset()) {
-        Items *new_items = GOTO(I, unit);
-        if(new_items == NULL) continue;
+        if(unit.Tag() == Tag::PROGRAM ||
+            unit.Tag() == Tag::EPSILON)
+          continue;
+        Itemset *new_itemset = GOTO(I, unit);
+        if(new_itemset == NULL) continue;
         int n_state; // GOTO(I, Unit) = n_state
-        if(number.find(*new_items) == number.end()) {
-          n_state = number[*new_items] = items_set.size();
-          new_items->Set_number(n_state);
-          items_set.push_back(new_items);
+        if(number.find(*new_itemset) == number.end()) {
+          n_state = number[*new_itemset] = itemsets.size();
+          new_itemset->Set_number(n_state);
+          itemsets.push_back(new_itemset);
           actions.push_back(NEW_ACTION);
-          Q.push(new_items);
+          Q.push(new_itemset);
         } else {
-          n_state = number[*new_items];
-          delete new_items;
+          n_state = number[*new_itemset];
+          delete new_itemset;
         }
         if(!gen_shift_and_goto(I->Number(), unit.Tag(), n_state))
           return false;
@@ -247,21 +259,39 @@ private:
   }/*}}}*/
 
   inline bool reduce_item(const Kernel& core) {/*{{{*/
-    return products[core.first]->Body(core.second) == -1;
+    const int b = products[core.first]->Body(core.second);
+    return b == -1 || b == Tag::EPSILON;
+  }/*}}}*/
+
+  inline void remove_nonkernel_item() {/*{{{*/
+    for(auto its : itemsets) {
+      for(auto it = its->Items().begin();
+          it != its->Items().end();) {
+        const int& p_id = (*it).PRODUCT_ID;
+        const int& dot = (*it).DOT;
+        if(dot != 0 || p_id == 0 ||
+            products[p_id]->Body(dot) == Tag::EPSILON) {
+          it++; continue;
+        }
+        it = its->Erase(it);
+      }
+    }
   }/*}}}*/
 
   bool gen_reduce_actions() {/*{{{*/
-    for(auto I : items_set) {
+    for(auto I : itemsets) {
       const int& i = I->Number();
-      for(auto it : I->Item_set()) {
+      for(auto it : I->Items()) {
         if(!reduce_item(it.Core)) continue;
         if(placed(i, units_ptr->Loc(it.Lookahead))) {
           error("Reduce conflict :" + std::to_string(i)
               + " - " + (*units_ptr)[it.Lookahead]);
           return false;
         }
-        actions[i][units_ptr->Loc(it.Lookahead)] =
-          "R" + std::to_string(it.Core.first);
+        std::string ac;
+        if(it.PRODUCT_ID == 0) ac = "ACC";
+        else ac = "R" + std::to_string(it.PRODUCT_ID);
+        actions[i][units_ptr->Loc(it.Lookahead)] = ac;
       }
     }
     return true;
