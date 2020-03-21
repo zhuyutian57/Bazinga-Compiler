@@ -27,10 +27,11 @@ using namespace bin;
 
 namespace parser {
 
-#define State int
+#define STATE int
 #define ACTION_ERROR "ERROR"
 #define ACTION_SET std::vector<std::string>
-#define NEW_ACTION ACTION_SET(units_ptr->Units_size(), ACTION_ERROR)
+#define NEW_ACTION ACTION_SET( \
+    units_ptr->Units_size() - 2, ACTION_ERROR)
 
 class Action {
 
@@ -49,7 +50,7 @@ public:
   }/*}}}*/
 
   const inline std::string& ACTION(
-      const State& s, const Lok& lok) {
+      const STATE& s, const Lok& lok) {
     return actions[s][units_ptr->Loc(lok)];
   }
 
@@ -194,14 +195,14 @@ private:
     return result;
   }/*}}}*/
 
-  inline bool placed(const State& i, const Lok& lok) {/*{{{*/
+  inline bool placed(const STATE& i, const Lok& lok) {/*{{{*/
     return actions[i][lok] != ACTION_ERROR;
   }/*}}}*/
 
   inline bool gen_shift_and_goto(/*{{{*/
-      const State& out,
+      const STATE& out,
       const int& unit_tag,
-      const State& in) {
+      const STATE& in) {
     int lok = units_ptr->Loc(unit_tag);
     if(placed(out, lok)) {
       error("Shift conflict : " + std::to_string(out)
@@ -216,8 +217,7 @@ private:
 
   void init_item_zero() {/*{{{*/
     Itemset *beg = new Itemset();
-    beg->Add_item(std::make_pair(
-          std::make_pair(0, 0), '$'));
+    beg->Add_item(NEW_ITEM(0, 0, '$'));
     beg->Set_number(itemsets.size());
     actions.push_back(NEW_ACTION);
     itemsets.push_back(CLOSURE(beg));
@@ -228,7 +228,7 @@ private:
   // Extra: calculating shift-actions and GOTOs
   bool gen_LR1_itemsets() {/*{{{*/
     init_item_zero();
-    std::map<Itemset, State, Itemset::Core_cmp> number;
+    std::map<Itemset, STATE, Itemset::Core_cmp> number;
     std::queue<Itemset*> Q;
     Q.push(itemsets[0]);
     number[(*Q.front())] = 0;
