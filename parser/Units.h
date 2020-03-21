@@ -12,8 +12,6 @@ using namespace symbol;
 
 namespace parser {
 
-#define NONTERMINAL_BEGIN 401
-
 class Units {
 
 public:
@@ -37,13 +35,6 @@ public:
     reserve("Term", Tag::TERM);
     reserve("Unary", Tag::UNARY);
     reserve("Factor", Tag::FACTOR);
-    reserve("ADD_ID", Tag::ADD_ID);
-    reserve("ID_EXIST", Tag::ID_EXIST);
-    // Test
-    //reserve("P", Tag::P);
-    //reserve("S", Tag::S);
-    //reserve("L", Tag::L);
-    //reserve("R", Tag::R);
   }
   ~Units(){}
 
