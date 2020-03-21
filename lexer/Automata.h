@@ -14,8 +14,8 @@
 
 namespace lexer {
 
-#define State int
-#define Edge std::pair<State, char>
+#define DNF_STATE int
+#define Edge std::pair<DNF_STATE, char>
 #define Pos_set std::set<int>
 
 // Build DFA directly from regular defination
@@ -41,8 +41,8 @@ public:
     ast = new Ast;
     pos_sets = new std::vector<Pos_set*>;
     alphabet = new std::set<char>;
-    edges = new std::map<Edge, State>;
-    acc = new std::set<State>;
+    edges = new std::map<Edge, DNF_STATE>;
+    acc = new std::set<DNF_STATE>;
   
   }
   ~Automata() {
@@ -64,7 +64,7 @@ public:
 
   void Reset() { cur = start; }
 
-  State Goto(char ch) {
+  DNF_STATE Goto(char ch) {
     Edge u = std::make_pair(cur, ch);
     if(edges->find(u) == edges->end())
       return -1;
@@ -72,16 +72,16 @@ public:
     return cur;
   }
 
-  State Goto(State i, char ch) {
+  DNF_STATE Goto(DNF_STATE i, char ch) {
     Edge u = std::make_pair(i, ch);
     if(edges->find(u) == edges->end())
       return -1;
     return (*edges)[u];
   }
 
-  State state() { return cur; }
+  DNF_STATE state() { return cur; }
 
-  bool Accepted(State i) {
+  bool Accepted(DNF_STATE i) {
     return acc->find(i) != acc->end();
   }
 
@@ -90,12 +90,12 @@ public:
   }
 
   int State_size() { return state_size; }
-  const State Begin() { return start; }
+  const DNF_STATE Begin() { return start; }
   const std::set<char>* Alphabet() { return alphabet; }
   const Pos_set* Pos_sets(int i) {
     return (*pos_sets)[i];
   }
-  const std::set<State>* Ends() {
+  const std::set<DNF_STATE>* Ends() {
     return acc;
   }
   
@@ -104,25 +104,25 @@ private:
   Ast *ast;
   
   int state_size;
-  State start;
+  DNF_STATE start;
   std::vector<Pos_set*>* pos_sets;
   std::set<char>* alphabet;
-  std::map<Edge, State>* edges;
-  std::set<State>* acc;
+  std::map<Edge, DNF_STATE>* edges;
+  std::set<DNF_STATE>* acc;
   
-  State cur;
+  DNF_STATE cur;
 
 private:
 
   void build_dfa(const std::vector<std::set<int>* >& followpos) {
     const int END_POS = ast->Leaf_size();
-    std::unordered_map<Pos_set, State, Hash> mps;
-    std::unordered_map<State, bool> vis;
-    std::queue<State> Q;
+    std::unordered_map<Pos_set, DNF_STATE, Hash> mps;
+    std::unordered_map<DNF_STATE, bool> vis;
+    std::queue<DNF_STATE> Q;
     Q.push(start);
     mps[(*(*pos_sets)[0])] = start;
     // u -> v
-    for(State u; !Q.empty(); ) {
+    for(DNF_STATE u; !Q.empty(); ) {
       u = Q.front(); Q.pop();
       if(vis.find(u) != vis.end()) continue;
       vis[u] = true;
@@ -136,7 +136,7 @@ private:
           }
         }
         if(v->empty()) { delete v; continue; }
-        State t; // Get id of v
+        DNF_STATE t; // Get id of v
         if(mps.find(*v) == mps.end()) {
           t = mps[*v] = state_size++;
           pos_sets->push_back(v);

@@ -89,7 +89,7 @@ private:
     (*words)[w->Lexe()] = (void*)w;
   }/*}}}*/
 
-  void add_new_word(const std::string& word) {
+  void add_new_word(const std::string& word) {/*{{{*/
     if(word[0] >= '0' && word[0] <= '9') {
       if(word.find('.') != std::string::npos) {
         reserve(new Float(word));
@@ -99,15 +99,15 @@ private:
     } else {
       reserve(new Word(word, symbol::Tag::ID));
     }
-  }
+  }/*}}}*/
 
-  void recognize(const std::string& word) {
+  void recognize(const std::string& word) {/*{{{*/
     if(words->find(word) == words->end())
       add_new_word(word);
     tokens->push_back((*words)[word]);
-  }
+  }/*}}}*/
 
-  bool analyze(const char* source_code) {
+  bool analyze(const char* source_code) {/*{{{*/
     Buf buf(source_code);
     // Read a word every circulation
     while(!buf.eof()) {
@@ -127,7 +127,7 @@ private:
       buf.seekg(end + 1);
     }
     return true;
-  }
+  }/*}}}*/
 
 }; // class Lexer
 
