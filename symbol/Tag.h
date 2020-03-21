@@ -28,15 +28,7 @@ namespace Tag {
   const static int STMTS = 402, STMT = 403;
   const static int EXPR = 404, TERM = 405;
   const static int UNARY = 406, FACTOR = 407;
-  const static int ADD_ID = 408, ID_EXIST = 409;
   /* ================= Parser ================= */
-
-  /* ================= Test ================= */
-  // Nonterminals
-  const static int
-    P = 501, S = 502, L = 503, R = 504;
-
-  /* ================= Test ================= */
 
 } // namespace Tag
 
