@@ -1,16 +1,24 @@
 
 #include <functional>
 #include <stack>
+#include <string>
 #include <vector>
 
 #include "Action.h"
+#include "Element.h"
 
 #include "../lexer/Lexer.h"
+using namespace lexer;
 
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
 namespace parser {
+
+#define STACK_POP(states_size) \
+  for(int i = 0; i < states_size; i++) { \
+    e_stack->pop(); \
+  }
 
 class Parser {
 
@@ -19,8 +27,7 @@ public:
     lok = NULL;
     lex = new lexer::Lexer();
     action = new Action();
-    state_stack = new std::stack<State>;
-    units_stack = new std::stack<void*>;
+    e_stack = new std::stack<Element>;
     reduce_funcs = new std::vector<std::function<bool()> >;
     reduce_funcs->push_back(NULL); // Accepted
     reduce_funcs->push_back(std::bind(&reduce_01, this));
@@ -40,14 +47,11 @@ public:
     reduce_funcs->push_back(std::bind(&reduce_15, this));
     reduce_funcs->push_back(std::bind(&reduce_16, this));
     reduce_funcs->push_back(std::bind(&reduce_17, this));
-    reduce_funcs->push_back(std::bind(&reduce_18, this));
-    reduce_funcs->push_back(std::bind(&reduce_19, this));
   }
   ~Parser() {
     delete lex;
     delete action;
-    delete state_stack;
-    delete units_stack;
+    delete e_stack;
     delete reduce_funcs;
   }/*}}}*/
 
@@ -64,48 +68,64 @@ private:
   void* lok;
   lexer::Lexer *lex;
   Action *action;
-  std::stack<State>* state_stack;
-  std::stack<void*>* units_stack;
+  std::stack<Element>* e_stack;
   std::vector<std::function<bool()> >* reduce_funcs;
 
 private:
   inline void shift(/*{{{*/
-      const State& state, void* input_ptr) {
-    state_stack->push(state);
-    units_stack->push(input_ptr);
+      const STATE& state, void* input_ptr) {
+    e_stack->push(Element(state, input_ptr));
   }/*}}}*/
 
-  inline bool GOTO() {/*{{{*/
+  inline bool GOTO(const STATE& s, Unit* unit) {/*{{{*/
+    const std::string& ac = action->ACTION(s, unit->Tag());
+    if(ac == ACTION_ERROR) return false;
+    e_stack->top().Set_state(std::stoi(ac));
     return true;
   }/*}}}*/
 
   inline bool reduce(const int& prod_id) {/*{{{*/
-    return (*reduce_funcs)[prod_id]();
+    if(!(*reduce_funcs)[prod_id]())
+      return false;
+    return GOTO(e_stack->top().State(),
+        (Unit*)e_stack->top().Ele());
   }/*}}}*/
 
   //TODO implement semantic actions
-  //Stmts -> Stmts Stmt
+  //Stmts -> Stmt Stmts
   bool reduce_01() {
-    
+    Stmts *stmts = new Stmts();
+    STACK_POP(1);
+    e_stack->top().Set_ele(stmts);
     return true;
   }
 
   //Stmts -> Epsilon
   bool reduce_02() {
+    Stmts *stmts = new Stmts();
+    e_stack->top().Set_ele(stmts);
     return true;
   }
 
-  //Stmt -> TYPE ID ADD_ID ;
+  //Stmt -> TYPE ID ;
   bool reduce_03() {
+    Stmt *stmt = new Stmt();
+    //TODO semantic action
+    STACK_POP(2);
+    e_stack->top().Set_ele(stmt);
     return true;
   }
 
-  //Stmt -> TYPE ID ADD_ID = Expr ;
+  //Stmt -> TYPE ID = Expr ;
   bool reduce_04() {
+    Stmt *stmt = new Stmt();
+    //TODO semantic action
+    STACK_POP(4);
+    e_stack->top().Set_ele(stmt);
     return true;
   }
 
-  //Stmt -> ID ID_EXIST = Expr ;
+  //Stmt -> ID = Expr ;
   bool reduce_05() {
     return true;
   }
@@ -167,16 +187,6 @@ private:
 
   //Factor -> FLOAT
   bool reduce_17() {
-    return true;
-  }
-
-  //ADD_ID -> Epsilon
-  bool reduce_18() {
-    return true;
-  }
-
-  //ID_EXIST -> Epsilon
-  bool reduce_19() {
     return true;
   }
 
