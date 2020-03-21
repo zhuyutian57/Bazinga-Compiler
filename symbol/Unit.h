@@ -4,6 +4,8 @@
 
 namespace symbol {
 
+#define NONTERMINAL_BEGIN 401
+
 class Unit {
 
 public:
