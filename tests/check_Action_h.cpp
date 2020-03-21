@@ -29,6 +29,10 @@ const int mod = 1000000007;
 
 #define FORMAT cout.width(8),cout.setf(ios::left)
 
+inline bool check(int i) {
+  return i == symbol::Tag::EPSILON || i == symbol::Tag::PROGRAM;
+}
+
 int main() {
 	//freopen("in.txt","r",stdin);
 	//freopen("out.txt","w",stdout);
@@ -41,6 +45,7 @@ int main() {
   FORMAT;
   cout << "State";
   for(auto unit : uptr->Unitset()) {
+    if(check(unit.Tag())) continue;
     FORMAT;
     cout << (*uptr)[unit.Tag()];
   }
