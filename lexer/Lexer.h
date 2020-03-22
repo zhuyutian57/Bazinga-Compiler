@@ -44,10 +44,10 @@ public:
     words = new std::unordered_map<std::string, void*>;
     tokens = new std::vector<void*>;
    
-    reserve(new Unit(';')); reserve(new Unit('+'));
-    reserve(new Unit('-')); reserve(new Unit('*'));
-    reserve(new Unit('/')); reserve(new Unit('='));
-    reserve(new Unit('(')); reserve(new Unit(')'));
+    reserve(new Terminal(';')); reserve(new Terminal('+'));
+    reserve(new Terminal('-')); reserve(new Terminal('*'));
+    reserve(new Terminal('/')); reserve(new Terminal('='));
+    reserve(new Terminal('(')); reserve(new Terminal(')'));
     reserve(new Type("int", Tag::TYPE, 4));
     reserve(new Type("float", Tag::TYPE, 8));
   }
@@ -57,7 +57,6 @@ public:
 
   bool Build(const char* rd_path) {/*{{{*/
     dfa->Build(rd_path);
-    tokens->push_back(new Unit(Tag::END));
     return true;
   }/*}}}*/
 
@@ -67,6 +66,7 @@ public:
       return false;
     }
     bin::info_lexer(words, tokens);
+    tokens->push_back(new Terminal(Tag::END));
     return true;
   }/*}}}*/
 
@@ -82,10 +82,7 @@ private:
 
 private:
 
-  inline void reserve(const Unit* t) {/*{{{*/
-    (*words)[std::string(1, t->Tag())] = (void*)t;
-  }
-  inline void reserve(const Word* w) {
+  inline void reserve(const Terminal* w) {
     (*words)[w->Lexe()] = (void*)w;
   }/*}}}*/
 
@@ -97,7 +94,7 @@ private:
         reserve(new Integer(word));
       }
     } else {
-      reserve(new Word(word, symbol::Tag::ID));
+      reserve(new Terminal(word, symbol::Tag::ID));
     }
   }/*}}}*/
 

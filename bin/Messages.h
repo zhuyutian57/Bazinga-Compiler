@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../lexer/Word.h"
+#include "../lexer/Terminal.h"
 #include "../parser/Itemset.h"
 #include "../parser/Product.h"
 #include "../parser/Units.h"
@@ -57,21 +57,10 @@ namespace bin {
     std::string sym = ";+-*/=()";
     for(auto addr : (*tokens)) {
       Unit *t = (Unit*)addr;
-      // Check weather *t is a word
-      bool flag = false;
-      for(auto ch : sym)
-        if(ch == t->Tag())
-          flag = true;
-      if(!flag) {
-        lexer::Word *p = (lexer::Word*)addr;
-        std::cout << '<' << p->Tag() << ',';
-        std::cout << p->Lexe() << ',';
-        std::cout << (*words)[p->Lexe()] << ">\n";
-      } else {
-        std::cout << '<' << char(t->Tag()) << ',';
-        std::cout << (*words)[std::string(1, t->Tag())]
-                  << ">\n";
-      }
+      lexer::Terminal *p = (lexer::Terminal*)addr;
+      std::cout << '<' << p->Tag() << ',';
+      std::cout << '\t' << p->Lexe() << ',';
+      std::cout << '\t' << (*words)[p->Lexe()] << ">\n";
     }
   }/*}}}*/
 

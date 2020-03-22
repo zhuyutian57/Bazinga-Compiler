@@ -5,15 +5,17 @@
 #include "../symbol/Unit.h"
 using namespace symbol;
 
-#ifndef _WORD_H_
-#define _WORD_H_
+#ifndef _TERMINAL_H_
+#define _TERMINAL_H_
 
 namespace lexer {
 
-class Word : public Unit {
+class Terminal : public Unit {
 
 public:
-  Word(const std::string& s, int t)
+  Terminal(const char& ch)
+    : Terminal(std::string("") + ch, ch) {}
+  Terminal(const std::string& s, int t)
     : lexeme(s), Unit(t) {}
 
   const std::string& Lexe() const { return lexeme; }
@@ -21,7 +23,7 @@ public:
 private:
   std::string lexeme;
 
-}; // class Word
+}; // class Terminal
 
 } // namespace lexer
 

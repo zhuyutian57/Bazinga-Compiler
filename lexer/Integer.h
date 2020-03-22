@@ -1,18 +1,18 @@
 
 #include <string>
 
-#include "Word.h"
+#include "Terminal.h"
 
 #ifndef _INTEGER_H_
 #define _INTEGER_H_
 
 namespace lexer {
 
-class Integer : public Word {
+class Integer : public Terminal {
 
 public:
   Integer(const std::string& s)
-    : Word(s, symbol::Tag::INTEGER),
+    : Terminal(s, symbol::Tag::INTEGER),
       val(std::stoi(s)) {} 
 
 private:
