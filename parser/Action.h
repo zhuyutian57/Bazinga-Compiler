@@ -16,10 +16,11 @@
 #include "Stmts.h"
 #include "Term.h"
 #include "Unary.h"
-#include "Units.h"
 
 #include "../bin/Funtions.h"
 #include "../bin/Messages.h"
+#include "../symbol/Unitset.h"
+
 using namespace bin;
 
 #ifndef _ACTION_H_
@@ -31,13 +32,13 @@ namespace parser {
 #define ACTION_ERROR "ERROR"
 #define ACTION_SET std::vector<std::string>
 #define NEW_ACTION ACTION_SET( \
-    units_ptr->Units_size() - 2, ACTION_ERROR)
+    units_ptr->Size() - 2, ACTION_ERROR)
 
 class Action {
 
 public:
   Action() {/*{{{*/
-    units_ptr = new Units();
+    units_ptr = new Unitset();
   }
   ~Action() {
     delete units_ptr;
@@ -55,13 +56,13 @@ public:
   }
 
   //Test
-  Units* Units_ptr() { return units_ptr; }
+  Unitset* Units_ptr() { return units_ptr; }
   std::vector<ACTION_SET>& Actions() {
     return actions;
   }
 
 private:
-  Units* units_ptr;
+  Unitset* units_ptr;
   std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
   std::vector<Itemset*> itemsets;  
@@ -101,7 +102,7 @@ private:
   }/*}}}*/
 
   void FIRST_of_units() {/*{{{*/
-    for(auto unit : units_ptr->Unitset()) {
+    for(auto unit : units_ptr->Units()) {
       int t = unit.Tag();
       first[t] = new std::set<int>;
       if(t < NONTERMINAL_BEGIN)
@@ -234,7 +235,7 @@ private:
     number[(*Q.front())] = 0;
     while(!Q.empty()) {
       Itemset *I = Q.front(); Q.pop();
-      for(auto unit : units_ptr->Unitset()) {
+      for(auto unit : units_ptr->Units()) {
         if(unit.Tag() == Tag::PROGRAM ||
             unit.Tag() == Tag::EPSILON)
           continue;
