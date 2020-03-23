@@ -52,7 +52,12 @@ public:
     reserve(new Type("float", Tag::TYPE, 8));
   }
   ~Lexer() {
-    delete words, tokens;
+    for(auto p : (*words)) {
+      Unit* ptr = (Unit*)p.second;
+      if(ptr->Tag() != Tag::TYPE)
+        delete ptr;
+    }
+    delete dfa, words, tokens;
   }/*}}}*/
 
   bool Build(const char* rd_path) {/*{{{*/
@@ -81,8 +86,7 @@ private:
   int cur;
 
 private:
-
-  inline void reserve(const Terminal* w) {
+  inline void reserve(const Terminal* w) {/*{{{*/
     (*words)[w->Lexe()] = (void*)w;
   }/*}}}*/
 
