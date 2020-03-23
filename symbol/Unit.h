@@ -4,6 +4,7 @@
 
 namespace symbol {
 
+#define TAG int
 #define NONTERMINAL_BEGIN 401
 
 class Unit {
