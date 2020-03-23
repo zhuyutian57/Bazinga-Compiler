@@ -1,16 +1,15 @@
 
-#include "Expr.h"
+#include "Nonterminal.h"
 
 #ifndef _UNARY_H_
 #define _UNARY_H_
 
 namespace parser {
 
-class Unary : public Expr {
+class Unary : public Nonterminal {
 
 public:
-  Unary(const ENTRY& entry, lexer::Type *type)
-    : Expr(entry, type, Tag::UNARY) {}
+  Unary() : Nonterminal(Tag::UNARY){}
   ~Unary(){}
 
 private:

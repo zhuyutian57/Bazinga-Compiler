@@ -7,11 +7,8 @@
 #include "Action.h"
 #include "Element.h"
 
-#include "../bin/Stack.h"
 #include "../lexer/Lexer.h"
-#include "../symbol/Env.h"
 using namespace lexer;
-using namespace symbol;
 
 #ifndef _PARSER_H_
 #define _PARSER_H_
@@ -26,10 +23,11 @@ namespace parser {
 class Parser {
 
 public:
-  Parser() : env(NULL), lok(NULL){/*{{{*/
+  Parser() {/*{{{*/
+    lok = NULL;
     lex = new lexer::Lexer();
     action = new Action();
-    e_stack = new bin::Stack<Element>;
+    e_stack = new std::stack<Element>;
     reduce_funcs = new std::vector<std::function<bool()> >;
     reduce_funcs->push_back(NULL); // Accepted
     reduce_funcs->push_back(std::bind(&reduce_01, this));
@@ -67,11 +65,10 @@ public:
   bool Run() { return true; }
 
 private:
-  Env *env;
   void* lok;
   lexer::Lexer *lex;
   Action *action;
-  bin::Stack<Element>* e_stack;
+  std::stack<Element>* e_stack;
   std::vector<std::function<bool()> >* reduce_funcs;
 
 private:
@@ -106,7 +103,7 @@ private:
   //Stmts -> Epsilon
   bool reduce_02() {
     Stmts *stmts = new Stmts();
-    e_stack->push(Elestmts);
+    e_stack->top().Set_ele(stmts);
     return true;
   }
 

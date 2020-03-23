@@ -1,16 +1,16 @@
 
-#include "Expr.h"
+#include "Nonterminal.h"
 
 #ifndef _FACTOR_H_
 #define _FACTOR_H_
 
 namespace parser {
 
-class Factor : public Expr {
+class Factor : public Nonterminal {
 
 public:
-  Factor(const ENTRY& entry, lexer::Type *type)
-    : Expr(entry, type, Tag::FACTOR){}
+  Factor(const ADDR adr)
+    : Nonterminal(Tag::FACTOR, adr){}
   ~Factor(){}
 
 private:

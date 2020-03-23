@@ -5,6 +5,7 @@
 #include "Stmts.h"
 #include "Term.h"
 #include "Unary.h"
+#include "Units.h"
 
 #ifndef _ELEMENT_H_
 #define _ELEMENT_H_
@@ -14,8 +15,6 @@ namespace parser {
 class Element {
 
 public:
-  Element(void *e)
-    : Element(-1, e){}
   Element(const int& s, void* e)
     : state(s), ele(e) {}
   ~Element() {

@@ -1,16 +1,15 @@
 
-#include "Expr.h"
+#include "Nonterminal.h"
 
 #ifndef _TERM_H_
 #define _TERM_H_
 
 namespace parser {
 
-class Term : public Expr {
+class Term : public Nonterminal {
 
 public:
-  Term(const ENTRY& entry, lexer::Type *type)
-    : Expr(entry, type, Tag::TERM){}
+  Term() : Nonterminal(Tag::TERM){}
   ~Term(){}
 
 private:

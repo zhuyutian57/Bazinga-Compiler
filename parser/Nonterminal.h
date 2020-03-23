@@ -17,9 +17,12 @@ class Nonterminal : public Unit {
 public:
   Nonterminal(const int t)
     : Unit(t) {}
+  Nonterminal(const int t, const ADDR adr)
+    : Unit(t), addr(adr) {}
   ~Nonterminal(){}
 
 private:
+  ADDR addr;
 
 }; // class Nonterminal
 
