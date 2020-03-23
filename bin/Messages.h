@@ -10,7 +10,7 @@
 #include "../lexer/Terminal.h"
 #include "../parser/Itemset.h"
 #include "../parser/Product.h"
-#include "../parser/Units.h"
+#include "../symbol/Unitset.h"
 
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
@@ -69,15 +69,15 @@ namespace bin {
     const std::vector<parser::Product*>& products,
     const std::vector<parser::Itemset*>& itemset,
     const std::vector<std::vector<std::string> >& actions) {
-    parser::Units mp;
+    symbol::Unitset *units = new Unitset();
     std::cout << " ============= ACTIONS =============\n";
     std::cout << " Products :\n";
     for(auto prod : products) {
       std::cout << "    " << prod->Number() << " : ";
-      std::cout << mp[prod->Head()] << " ->";
+      std::cout << (*units)[prod->Head()] << " ->";
       for(int i = 0, j; j = prod->Body(i) ;i++) {
         if(j == -1) break;
-        std::cout << ' ' << mp[j];
+        std::cout << ' ' << (*units)[j];
       }
       std::cout << '\n';
     }
@@ -85,9 +85,9 @@ namespace bin {
     std::cout << " - FIRST set:\n";
     for(auto f : first) {
       if(f.second->size() == 0) continue;
-      std::cout << " - "<< mp[f.first] << " :";
+      std::cout << " - "<< (*units)[f.first] << " :";
       for(auto tag : (*f.second))
-        std::cout << ' ' << mp[tag];
+        std::cout << ' ' << (*units)[tag];
       std::cout << '\n';
     }
     std::cout << '\n';
@@ -99,15 +99,15 @@ namespace bin {
         std::cout << " - "
           << item.Core.first << ' '
           << item.Core.second << " , "
-          << mp[item.Lookahead];
+          << (*units)[item.Lookahead];
         std::cout << '\n';
       }
       std::cout << " - actions & gotoes:\n";
       int state = items->Number();
-      for(auto unit : mp.Unitset()) {
-        int lo = mp.Loc(unit.Tag());
+      for(auto unit : units->Units()) {
+        int lo = units->Loc(unit.Tag());
         if(actions[state][lo] != "ERROR")
-          std::cout << " - " << mp[unit.Tag()] << ' '
+          std::cout << " - " << (*units)[unit.Tag()] << ' '
             << actions[state][lo] << '\n';
       }
       std::cout << '\n';
