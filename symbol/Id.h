@@ -15,6 +15,10 @@ public:
     : name(s), type(t) {}
   ~Id() { delete type; }
 
+  const std::string& Name() { return name; }
+
+  lexer::Type* Type() { return type; }
+
 private:
   std::string name;
   lexer::Type *type;

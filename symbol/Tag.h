@@ -30,6 +30,13 @@ namespace Tag {
   const static int UNARY = 406, FACTOR = 407;
   /* ================= Parser ================= */
 
+  /* ================= Test ================= */
+  // Nonterminals
+  const static int
+    P = 501, S = 502, L = 503, R = 504;
+
+  /* ================= Test ================= */
+
 } // namespace Tag
 
 } // namespace symbol

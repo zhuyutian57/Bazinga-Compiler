@@ -10,7 +10,7 @@ class Stmts : public Nonterminal {
 
 public:
   Stmts() : Nonterminal(Tag::STMTS) {}
-  ~Stmts(){}
+  ~Stmts() {}
 
 private:
 

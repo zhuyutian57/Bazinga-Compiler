@@ -1,5 +1,6 @@
 
 #include "Expr.h"
+#include "Unary.h"
 
 #ifndef _TERM_H_
 #define _TERM_H_
@@ -10,8 +11,8 @@ class Term : public Expr {
 
 public:
   Term(const ENTRY& entry, lexer::Type *type)
-    : Expr(entry, type, Tag::TERM){}
-  ~Term(){}
+    : Expr(entry, type, Tag::TERM) {}
+  ~Term() {}
 
 private:
 

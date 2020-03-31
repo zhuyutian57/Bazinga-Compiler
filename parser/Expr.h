@@ -19,11 +19,11 @@ public:
     : Nonterminal(Tag::EXPR), type(tp), entry(e) {}
   Expr(const ENTRY& e, lexer::Type *tp, const TAG& tag)
     : Nonterminal(tag), type(tp), entry(e) {}
-  ~Expr(){}
+  ~Expr() {}
 
   const ENTRY& Entry() { return entry; }
 
-  TAG Type() { return type->Tag(); }
+  lexer::Type *Type() { return type; }
 
 private:
   ENTRY entry;

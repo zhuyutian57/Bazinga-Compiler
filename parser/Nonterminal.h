@@ -17,7 +17,7 @@ class Nonterminal : public Unit {
 public:
   Nonterminal(const int t)
     : Unit(t) {}
-  ~Nonterminal(){}
+  ~Nonterminal() {}
 
 private:
 

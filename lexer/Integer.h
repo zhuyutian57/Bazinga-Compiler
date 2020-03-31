@@ -15,6 +15,8 @@ public:
     : Terminal(s, symbol::Tag::INTEGER),
       val(std::stoi(s)) {} 
 
+  const int& Val() { return val; }
+
 private:
   int val;
 

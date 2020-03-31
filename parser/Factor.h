@@ -10,8 +10,8 @@ class Factor : public Expr {
 
 public:
   Factor(const ENTRY& entry, lexer::Type *type)
-    : Expr(entry, type, Tag::FACTOR){}
-  ~Factor(){}
+    : Expr(entry, type, Tag::FACTOR) {}
+  ~Factor() {}
 
 private:
 
