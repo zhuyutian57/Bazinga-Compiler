@@ -9,8 +9,8 @@ namespace parser {
 class Product {
 
 public:
-  Product(){}
-  ~Product(){}
+  Product() {}
+  ~Product() {}
 
   int Number() { return number; }
   int Head() { return head; }
@@ -19,15 +19,18 @@ public:
       return -1;
     return bodies[i];
   }
+  const int BodySize() {
+    return bodies.size();
+  }
 
-  void Set_number(const int num) { number = num; }
-  void Set_head(const int h) { head = h; }
-  void Add_body(const int b) { bodies.push_back(b); }
+  void SetNumber(const int num) { number = num; }
+  void SetHead(const int h) { head = h; }
+  void AddBody(const int b) { bodies.push_back(b); }
 
 private:
-  int number;
-  int head;
-  std::vector<int> bodies;
+  int               number;
+  int               head;
+  std::vector<int>  bodies;
 
 }; // class Product
 

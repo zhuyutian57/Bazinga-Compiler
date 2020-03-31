@@ -11,31 +11,36 @@
 
 namespace symbol {
 
-class Unitset {
+class UnitSet {
 
 public:
-  Unitset() : index(0) {/*{{{*/
+  UnitSet() : index(0) {/*{{{*/
     // Terminals
-    reserve("TYPE", Tag::TYPE);
-    reserve("ID", Tag::ID);
-    reserve("INTEGER", Tag::INTEGER);
-    reserve("FLOAT", Tag::FLOAT);
-    reserve('+'); reserve('-');
-    reserve('*'); reserve('/');
-    reserve(';'); reserve('=');
-    reserve('('); reserve(')');
-    reserve('$');
-    reserve("Epsilon", Tag::EPSILON);
+    Reserve("TYPE", Tag::TYPE);
+    Reserve("ID", Tag::ID);
+    Reserve("INTEGER", Tag::INTEGER);
+    Reserve("FLOAT", Tag::FLOAT);
+    Reserve('+'); Reserve('-');
+    Reserve('*'); Reserve('/');
+    Reserve(';'); Reserve('=');
+    Reserve('('); Reserve(')');
+    Reserve('$');
+    Reserve("Epsilon", Tag::EPSILON);
     // Nonterminals
-    reserve("Program", Tag::PROGRAM);
-    reserve("Stmts", Tag::STMTS);
-    reserve("Stmt", Tag::STMT);
-    reserve("Expr", Tag::EXPR);
-    reserve("Term", Tag::TERM);
-    reserve("Unary", Tag::UNARY);
-    reserve("Factor", Tag::FACTOR);
+    Reserve("Program", Tag::PROGRAM);
+    Reserve("Stmts", Tag::STMTS);
+    Reserve("Stmt", Tag::STMT);
+    Reserve("Expr", Tag::EXPR);
+    Reserve("Term", Tag::TERM);
+    Reserve("Unary", Tag::UNARY);
+    Reserve("Factor", Tag::FACTOR);
+    // Tests
+    //Reserve("P", Tag::P);
+    //Reserve("S", Tag::S);
+    //Reserve("L", Tag::L);
+    //Reserve("R", Tag::R);
   }
-  ~Unitset(){}/*}}}*/
+  ~UnitSet(){}/*}}}*/
 
   std::string operator[](const int& t) {/*{{{*/
     return tag_to_str[t];
@@ -44,29 +49,32 @@ public:
     return str_to_tag[s];
   }/*}}}*/
 
-  const int Size() { return unitset.size(); }
-  const std::vector<Unit>& Units() { return unitset; }
-  const int Loc(const int& t) {
-    const int& lo = index[t];
-    if(t >= NONTERMINAL_BEGIN) return lo - 2;
-    return lo;
+  const int Size() { return units.size(); }
+  const std::vector<Unit>& Units() { return units; }
+  const int Index(const int& tag) { return index[tag]; }
+  bool IsIndexed(const int& tag) {
+    return tag != Tag::EPSILON && tag != Tag::PROGRAM;
+  }
+  bool IsIndexed(const Unit& unit) {
+    return IsIndexed(unit.Tag());
   }
 
 private:
-  std::vector<Unit> unitset;
+  std::vector<Unit> units;
   std::unordered_map<int, int> index;
   std::unordered_map<int, std::string> tag_to_str;
   std::unordered_map<std::string, int> str_to_tag;
 
 private:
-   void reserve(const std::string& s, int t) {/*{{{*/
-     index[t] = unitset.size();
-     unitset.push_back(Unit(t));
+   void Reserve(const std::string& s, int t) {/*{{{*/
+     index[t] = units.size();
+     units.push_back(Unit(t));
+     if(t >= NONTERMINAL_BEGIN) index[t] -= 2;
      tag_to_str[t] = s;
      str_to_tag[s] = t;
   }
-  void reserve(const char ch) {
-    reserve(std::string("") + ch, ch);
+  void Reserve(const char ch) {
+    Reserve(std::string("") + ch, ch);
   }/*}}}*/
 
 

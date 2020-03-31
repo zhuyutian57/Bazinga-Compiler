@@ -22,11 +22,11 @@ public:
     if(ele != NULL) Delete();
   }
 
-  int State() { return state; }
+  const int& State() { return state; }
   void* Ele() { return ele; }
 
-  void Set_state(const int& s) { state = s; }
-  void Set_ele(void *ptr) { ele = ptr; }
+  void SetState(const int& s) { state = s; }
+  void SetEle(void *ptr) { ele = ptr; }
 
 private:
   int state;

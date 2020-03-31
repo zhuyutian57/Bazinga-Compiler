@@ -1,5 +1,7 @@
 
+#include <iostream>
 #include <set>
+#include <string>
 
 #ifndef _FUNTIONS_H_
 #define _FUNTIONS_H_
@@ -7,8 +9,7 @@
 namespace bin {
  
 template<typename T>  
-void move_set2set(std::set<T>* in, 
-    const std::set<T>* out) {
+void MoveSetToSet(const std::set<T>* out, std::set<T>* in) {
   for(auto e : (*out)) in->insert(e);
 }
 

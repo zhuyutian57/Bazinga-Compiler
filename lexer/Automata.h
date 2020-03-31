@@ -37,29 +37,27 @@ private:
   }; //struct Hash
 
 public:
-  Automata() {
+  Automata() {/*{{{*/
     ast = new Ast;
     pos_sets = new std::vector<Pos_set*>;
     alphabet = new std::set<char>;
     edges = new std::map<Edge, DNF_STATE>;
     acc = new std::set<DNF_STATE>;
-  
   }
   ~Automata() {
     delete ast, alphabet, edges, acc;
-    delete [] pos_sets;
-  }
+    delete pos_sets;
+  }/*}}}*/
 
   void Build(const char* rd_path) {
     ast->Build(rd_path);
-    move_set2set(alphabet, ast->Characters());
+    MoveSetToSet(ast->Characters(), alphabet);
     pos_sets->push_back(new Pos_set);
-    move_set2set((*pos_sets)[0], ast->Root_firstpos());
+    MoveSetToSet(ast->Root_firstpos(), (*pos_sets)[0]);
     start = 0;
     state_size = 1;
-    build_dfa(ast->Followpos());
-    info_automata(
-        state_size, start, alphabet, acc);
+    BuildDFA(ast->Followpos());
+    InfoAutomata(state_size, start, alphabet, acc);
   }
 
   void Reset() { cur = start; }
@@ -114,7 +112,7 @@ private:
 
 private:
 
-  void build_dfa(const std::vector<std::set<int>* >& followpos) {
+  void BuildDFA(const std::vector<std::set<int>* >& followpos) {
     const int END_POS = ast->Leaf_size();
     std::unordered_map<Pos_set, DNF_STATE, Hash> mps;
     std::unordered_map<DNF_STATE, bool> vis;
@@ -130,21 +128,15 @@ private:
         acc->insert(u);
       for(auto ch : (*alphabet)) {
         Pos_set *v = new Pos_set;
-        for(auto p : (*(*pos_sets)[u])) {
-          if(ast->Posch(p) == ch) {
-            move_set2set(v, followpos[p]);
-          }
-        }
+        for(auto p : (*(*pos_sets)[u]))
+          if(ast->Posch(p) == ch)
+            MoveSetToSet(followpos[p], v);
         if(v->empty()) { delete v; continue; }
         DNF_STATE t; // Get id of v
         if(mps.find(*v) == mps.end()) {
           t = mps[*v] = state_size++;
-          pos_sets->push_back(v);
-          Q.push(t);
-        } else {
-          t = mps[*v];
-          delete v;
-        }
+          pos_sets->push_back(v); Q.push(t);
+        } else { t = mps[*v]; delete v; }
         (*edges)[std::make_pair(u, ch)] = t;
       }
     }

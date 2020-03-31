@@ -8,7 +8,7 @@
 
 #include "Node.h"
 
-#include "../bin/Funtions.h"
+#include "../bin/Functions.h"
 #include "../bin/Messages.h"
 using namespace bin;
 
@@ -33,11 +33,10 @@ private:
     }
   }; // struct Info
 
-
 public:
-  Ast() : leaf_size(-1), lexeme_tree(NULL) {
-    mpr["letters"] = build_letters_tree();
-    mpr["digits"] = build_digits_tree();
+  Ast() : leaf_size(-1), lexeme_tree(NULL) {/*{{{*/
+    mpr["letters"] = BuildLetterTree();
+    mpr["digits"] = BuildDigitTree();
     root_firstpos = new std::set<int>;
     posch = new std::unordered_map<int, char>;
     characters = new std::set<char>;
@@ -47,16 +46,16 @@ public:
     delete root_firstpos;
     if(lexeme_tree != NULL)
       delete lexeme_tree;
-  }
+  }/*}}}*/
 
-  bool Build(const char* rd_path) {
-    if(!build_trees(rd_path)) return false;
+  bool Build(const char* rd_path) {/*{{{*/
+    if(!BuildTrees(rd_path)) return false;
     lexeme_tree = new Node(CAT, mpr["Lexeme"], new Node('#'));
-    Info* root = calculate(lexeme_tree);
-    move_set2set(root_firstpos, root->firstpos);
+    Info* root = Calculate(lexeme_tree);
+    MoveSetToSet(root->firstpos, root_firstpos);
     delete root;
     return true;
-  }
+  }/*}}}*/
 
   int Leaf_size() { return leaf_size; }
   const std::set<int>* Root_firstpos() {
@@ -85,21 +84,21 @@ private:
 
 private:
   //TODO So ugly, make it beautiful
-  Node* create_node(const std::string& s) {
+  Node* CreateNode(const std::string& s) {/*{{{*/
     if(s == "(") return new Node(LBR);
     if(s == ")") return new Node(RBR);
     if(s == "|") return new Node(OR);
     if(s == "+") return new Node(PLUS);
     if(s == "*") return new Node(STAR);
     Node *p;
-    if(s[0] == '[') p = build_not_tree(s);
+    if(s[0] == '[') p = BuildNotTree(s);
     else if(mpr.find(s) != mpr.end()) p = mpr[s];
     else if(s[0] == '\\') p = new Node(s[1]);
     else p = new Node(s[0]);
     return new Node(SUBT, p, NULL);
-  }
+  }/*}}}*/
 
-  Node* merge_nodes(std::stack<Node*>* S) {
+  Node* MergeNodes(std::stack<Node*>* S) {/*{{{*/
     Node *p, *del;
     del = S->top(); S->pop();
     p = del->Ls();
@@ -117,20 +116,20 @@ private:
       delete del;
     }
     return p;
-  }
+  }/*}}}*/
 
-  Node* build_subtrees(std::istringstream& ss) {
+  Node* BuildSubtrees(std::istringstream& ss) {/*{{{*/
     std::string x;
     std::stack<Node*>* S = new std::stack<Node*>;
     while(ss >> x) {
-      Node *t = create_node(x);
+      Node *t = CreateNode(x);
       switch(t->Nt()) {
         case OR:
-          S->push(new Node(SUBT, merge_nodes(S), NULL));
+          S->push(new Node(SUBT, MergeNodes(S), NULL));
           break;
         case RBR:
           delete t;
-          t = new Node(SUBT, merge_nodes(S), NULL);
+          t = new Node(SUBT, MergeNodes(S), NULL);
           delete S->top(); S->pop();
           break;
         case LBR: break;
@@ -142,10 +141,11 @@ private:
       }
       S->push(t);
     }
-    return merge_nodes(S);
-  }
+    return MergeNodes(S);
+  }/*}}}*/
 
-  bool build_trees(const char* rd_path) {
+  bool BuildTrees(const char* rd_path) {/*{{{*/
+    std::cin.clear();
     freopen(rd_path, "r", stdin);
     std::string rd;
     while(std::getline(std::cin, rd)) {
@@ -153,15 +153,15 @@ private:
       std::string name, flag;
       ss >> name >> flag;
       if(flag != "->") {
-        err_rd(name, ss);
+        ErrorRegularDefination(name, ss);
         return false;
       }
-      mpr[name] = build_subtrees(ss);
+      mpr[name] = BuildSubtrees(ss);
     }
     return true;
-  }
+  }/*}}}*/
 
-  Node* build_or_tree(const std::string& s) {
+  Node* BuildOrTree(const std::string& s) {/*{{{*/
     Node* rt = NULL;
     for(auto ch : s) {
       if(rt == NULL) {
@@ -171,19 +171,19 @@ private:
       rt = new Node(OR, rt, new Node(ch));
     }
     return rt;
-  }
+  }/*}}}*/
 
-  Node* build_not_tree(const std::string& s) {
+  Node* BuildNotTree(const std::string& s) {/*{{{*/
     if(s[1] != '^') return NULL;
     std::set<char>* del = new std::set<char>;
     for(int i = 2; i < s.size() - 1; i++)
       del->insert(s[i]);
     if(s[2] >= '0' && s[2] <= '9')
-      return build_digits_tree(del);
-    return build_letters_tree(del);
-  }
+      return BuildDigitTree(del);
+    return BuildLetterTree(del);
+  }/*}}}*/
 
-  Node* build_letters_tree(const std::set<char>* del = NULL) {
+  Node* BuildLetterTree(const std::set<char>* del = NULL) {/*{{{*/
     std::string s = "";
     for(char c = 'a'; c <= 'z'; c++)
       if(del == NULL || del->find(c) == del->end())
@@ -191,27 +191,25 @@ private:
     for(char c = 'A'; c <= 'Z'; c++)
       if(del == NULL || del->find(c) == del->end())
         s += c;
-    return build_or_tree(s);
-  }
+    return BuildOrTree(s);
+  }/*}}}*/
 
-  Node* build_digits_tree(const std::set<char>* del = NULL) {
+  Node* BuildDigitTree(const std::set<char>* del = NULL) {/*{{{*/
     std::string s = "";
     for(char c = '0'; c <= '9'; c++)
       if(del == NULL || del->find(c) == del->end())
         s += c;
-    return build_or_tree(s);
-  }
+    return BuildOrTree(s);
+  }/*}}}*/
 
-  // ========================================================
-  // Calculate followpos
-
-  void cal_followpos(std::set<int>* in, std::set<int>* out) {
+  void CalculateFollowPosition(/*{{{*/
+      std::set<int>* in, std::set<int>* out) {
     for(auto i : (*in))
       for(auto n : (*out))
         followpos[i]->insert(n);
-  }
+  }/*}}}*/
 
-  Info* calculate(const Node *p) {
+  Info* Calculate(const Node *p) {/*{{{*/
     Info* info = new Info();
     switch(p->Nt()) {
       case LEAF:
@@ -224,44 +222,44 @@ private:
         followpos.push_back(new std::set<int>);
         break;
       case STAR: {
-        Info* i_ls = calculate(p->Ls());
+        Info* i_ls = Calculate(p->Ls());
         info->nullable = true;
-        move_set2set(info->firstpos, i_ls->firstpos);
-        move_set2set(info->lastpos, i_ls->lastpos);
-        cal_followpos(info->lastpos, info->firstpos);
+        MoveSetToSet(i_ls->firstpos, info->firstpos);
+        MoveSetToSet(i_ls->lastpos, info->lastpos);
+        CalculateFollowPosition(info->lastpos, info->firstpos);
         delete i_ls;
         break;
       }
       case CAT: {
-        Info *i_ls = calculate(p->Ls());
-        Info *i_rs = calculate(p->Rs());
+        Info *i_ls = Calculate(p->Ls());
+        Info *i_rs = Calculate(p->Rs());
         info->nullable = (i_ls->nullable && i_rs->nullable);
-        cal_followpos(i_ls->lastpos, i_rs->firstpos);
-        move_set2set(info->firstpos, i_ls->firstpos);
-        move_set2set(info->lastpos, i_rs->lastpos);
+        CalculateFollowPosition(i_ls->lastpos, i_rs->firstpos);
+        MoveSetToSet(i_ls->firstpos, info->firstpos);
+        MoveSetToSet(i_rs->lastpos, info->lastpos);
         if(i_ls->nullable)
-          move_set2set(info->firstpos, i_rs->firstpos);
+          MoveSetToSet(i_rs->firstpos, info->firstpos);
         if(i_rs->nullable)
-          move_set2set(info->lastpos, i_ls->lastpos);
+          MoveSetToSet(i_ls->lastpos, info->lastpos);
         delete i_ls, i_rs;
         break;
       }
       case OR: {
-        Info *i_ls = calculate(p->Ls());
-        Info *i_rs = calculate(p->Rs());
+        Info *i_ls = Calculate(p->Ls());
+        Info *i_rs = Calculate(p->Rs());
         info->nullable = (i_ls->nullable || i_rs->nullable);
-        move_set2set(info->firstpos, i_ls->firstpos);
-        move_set2set(info->firstpos, i_rs->firstpos);
-        move_set2set(info->lastpos, i_ls->lastpos);
-        move_set2set(info->lastpos, i_rs->lastpos);
+        MoveSetToSet(i_ls->firstpos, info->firstpos);
+        MoveSetToSet(i_rs->firstpos, info->firstpos);
+        MoveSetToSet(i_ls->lastpos, info->lastpos);
+        MoveSetToSet(i_rs->lastpos, info->lastpos);
         delete i_ls, i_rs;
         break;
       }
       case PLUS: break; //TODO add PLUS
-      default: error("Fail to build AST!\n");
+      default: Error("Fail to build AST!\n");
     }
     return info;
-  }
+  }/*}}}*/
 
 }; // class Ast
 

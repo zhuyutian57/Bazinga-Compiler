@@ -60,23 +60,25 @@ public:
     delete dfa, words, tokens;
   }/*}}}*/
 
-  bool Build(const char* rd_path) {/*{{{*/
-    dfa->Build(rd_path);
+  bool Build(const char* regular_definations) {/*{{{*/
+    dfa->Build(regular_definations);
     return true;
   }/*}}}*/
 
   bool Analyze(const char* source_codes) {/*{{{*/
     if(!analyze(source_codes)) {
-      error("Fail to build DFA!");
+      Error("Fail to build DFA!");
       return false;
     }
-    bin::info_lexer(words, tokens);
+    bin::InfoLexer(words, tokens);
     tokens->push_back(new Terminal(Tag::END));
     return true;
   }/*}}}*/
 
-  // Return a word everytime
-  void* Next_word() { return (*tokens)[cur++]; }
+  // Return a terminal everytime
+  Terminal* Next_terminal() {/*{{{*/
+    return (Terminal*)(*tokens)[cur++];
+  }/*}}}*/
 
 private:
   Automata *dfa;
@@ -87,7 +89,7 @@ private:
 
 private:
   inline void reserve(const Terminal* w) {/*{{{*/
-    (*words)[w->Lexe()] = (void*)w;
+    (*words)[w->Lexeme()] = (void*)w;
   }/*}}}*/
 
   void add_new_word(const std::string& word) {/*{{{*/

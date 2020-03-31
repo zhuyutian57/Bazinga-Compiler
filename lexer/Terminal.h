@@ -18,7 +18,7 @@ public:
   Terminal(const std::string& s, int t)
     : lexeme(s), Unit(t) {}
 
-  const std::string& Lexe() const { return lexeme; }
+  const std::string& Lexeme() const { return lexeme; }
 
 private:
   std::string lexeme;

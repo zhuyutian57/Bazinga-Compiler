@@ -14,7 +14,7 @@ namespace symbol {
 #define Table \
   std::unordered_map<std::string, Id*>
 #define TYPE_MANAGER \
-  std::unordered_map<TAG, lexer::Type*>
+  std::unordered_map<std::string, lexer::Type*>
 
 class Env {
 
@@ -25,16 +25,17 @@ public:
   }
   Env(Env *e) : pre(e) {
     table = new Table;
+    types = e->types;
   }
   ~Env() {}
 
-  void Put(const std::string& name,
+  void Put(const lexer::Terminal *word,
       lexer::Type *type) {
-    if(table->find(name) != table->end())
+    if(table->find(word->Lexeme()) != table->end())
       return;
-    if(types->find(type->Tag()) != types->end())
-      (*types)[type->Tag()] = type;
-    (*table)[name] = new Id(name, type);
+    if(types->find(type->Lexeme()) == types->end())
+      (*types)[type->Lexeme()] = type;
+    (*table)[word->Lexeme()] = new Id(word->Lexeme(), type);
   }
   
   Id* Get(const std::string& name) {
@@ -44,18 +45,18 @@ public:
     return NULL;
   }
 
-  bool find(const std::string& name) {
-    return table->find(name) != table->end();
+  bool Find(const lexer::Terminal *word) {
+    return table->find(word->Lexeme()) != table->end();
   }
 
-  lexer::Type* Type(const TAG& t) {
+  lexer::Type* Type(const std::string& t) {
     return (*types)[t];
   }
 
 private:
   Table *table;
   Env *pre;
-  static TYPE_MANAGER *types;
+  TYPE_MANAGER *types;
 
 }; // class Env
 
