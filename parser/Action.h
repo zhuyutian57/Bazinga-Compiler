@@ -17,9 +17,10 @@
 #include "Term.h"
 #include "Unary.h"
 
-#include "../bin/Funtions.h"
+#include "../bin/Functions.h"
+#include "../bin/Graph.h"
 #include "../bin/Messages.h"
-#include "../symbol/Unitset.h"
+#include "../symbol/UnitSet.h"
 
 using namespace bin;
 
@@ -28,81 +29,80 @@ using namespace bin;
 
 namespace parser {
 
-#define STATE int
-#define ACTION_ERROR "ERROR"
-#define ACTION_SET std::vector<std::string>
-#define NEW_ACTION ACTION_SET( \
-    units_ptr->Size() - 2, ACTION_ERROR)
+#define LRONE_KERNEL                first
+#define LRONE_LOK                   second
+#define LRONE_PRODUCT_INDEX         first.first
+#define LRONE_DOT                   first.second
+#define LRONE_ITEM                  std::pair<ITEM, LOK>
+#define NEW_LRONE_ITEM(item, lok)   std::make_pair(item, lok)
+#define LRONE_ITEMSET               std::set<LRONE_ITEM>
+#define STATE                       int
+#define ACTION_ERROR                "ERROR"
+#define ACTION_SET                  std::vector<std::string>
+#define NEW_ACTION_SET \
+  ACTION_SET(unitset.Size() - 2, ACTION_ERROR)
 
 class Action {
 
 public:
-  Action() {/*{{{*/
-    units_ptr = new Unitset();
-  }
-  ~Action() {
-    delete units_ptr;
-  }/*}}}*/
+  Action() {}
+  ~Action() {}
 
   bool Build(const char* grammars) {/*{{{*/
-    if(!gen_action(grammars)) return false;
-    info_action(first, products, itemsets, actions);
+    if(!GenerateActionTable(grammars)) return false;
+    InfoAction(unitset, first, products, itemsets, action_table);
     return true;
   }/*}}}*/
 
-  const inline std::string& ACTION(
-      const STATE& s, const Lok& lok) {
-    return actions[s][units_ptr->Loc(lok)];
-  }
+  const std::string& ACTION(/*{{{*/
+      const STATE& s, const LOK& lok) {
+    return action_table[s][unitset.Index(lok)];
+  }/*}}}*/
 
-  //Test
-  Unitset* Units_ptr() { return units_ptr; }
-  std::vector<ACTION_SET>& Actions() {
-    return actions;
-  }
+  symbol::UnitSet& Units() { return unitset; }
 
 private:
-  Unitset* units_ptr;
+  UnitSet unitset;
   std::unordered_map<int, std::set<int>* > first;
   std::vector<Product*> products;
-  std::vector<Itemset*> itemsets;  
-  // ACTIONs and GOTOs
-  std::vector<ACTION_SET> actions;
+  std::vector<ItemSet*> itemsets;
+  std::vector<ACTION_SET> action_table;
 
 private:
 
-  bool gen_action(const char* grammars) {/*{{{*/
-    if(!recognize_cfg(grammars)) return false;
-    FIRST_of_units();
-    if(!gen_LR1_itemsets()) return false;
-    remove_nonkernel_item();
-    if(!gen_reduce_actions()) return false;
+  bool GenerateActionTable(const char* grammars) {/*{{{*/
+    if(!RecognizeCFL(grammars)) return false;
+    CalculateFirstTerminalOfUnit();
+    if(!GenerateLRZeroItemSet()) return false;
+    BuildLokSet();
+    if(!GenerateLALROneItemSet()) return false;
+    if(!GenerateReduce()) return false;
     return true;
   }/*}}}*/
 
-  bool recognize_cfg(const char* grammars) {/*{{{*/
+  bool RecognizeCFL(const char* grammars) {/*{{{*/
+    std::cin.clear();
     freopen(grammars, "r", stdin);
     std::string product;
     while(std::getline(std::cin, product)) {
-      // make product as word stream
       // head -> body1 body2 ...
       std::istringstream ss(product);
       Product *prod = new Product();
       std::string word;
       ss >> word;
-      prod->Set_head((*units_ptr)[word]);
+      prod->SetHead(unitset[word]);
       ss >> word;
       if(word != "->") return false;
       while(ss >> word)
-        prod->Add_body((*units_ptr)[word]);
-      prod->Set_number(products.size());
+        prod->AddBody(unitset[word]);
+      prod->SetNumber(products.size());
       products.push_back(prod);
     }
     return true;
   }/*}}}*/
 
-  void FIRST_of_units() {/*{{{*/
-    for(auto unit : units_ptr->Units()) {
+  void CalculateFirstTerminalOfUnit() {/*{{{*/
+    for(auto unit : unitset.Units()) {
       int t = unit.Tag();
       first[t] = new std::set<int>;
       if(t < NONTERMINAL_BEGIN)
@@ -116,7 +116,7 @@ private:
           b = prod->Body(i);
           if(b == -1) break;
           int head_first_size = first[h]->size();
-          move_set2set(first[h], first[b]);
+          MoveSetToSet(first[b], first[h]);
           if(first[h]->size() != head_first_size)
             has_move = true;
           if(first[b]->find(Tag::EPSILON)
@@ -126,173 +126,257 @@ private:
       }
     }
   }/*}}}*/
+  
+  inline void AddItemSet(ItemSet *itemset) {/*{{{*/
+    itemset->SetNumber(itemsets.size());
+    itemsets.push_back(itemset);
+    action_table.push_back(NEW_ACTION_SET);
+  }/*}}}*/
+  
+  inline void BuildLokSet() {/*{{{*/
+    for(auto itemset : itemsets)
+      itemset->BuildLokSet();
+    itemsets[0]->LokSet(NEW_ITEM(0, 0))->insert('$');
+  }/*}}}*/
 
-  // Calculate FIRST(βa)
-  std::set<Lok>* FIRST(/*{{{*/
-      const std::vector<Lok>& beta,
-      const Lok& a) {
-    std::set<Lok>* loks = new std::set<Lok>;
-    bool eps = true;
-    for(auto unit : beta) {
-      for(auto u : (*first[unit]))
-        if(u != Tag::EPSILON)
-          loks->insert(u);
-      if(first[unit]->find(Tag::EPSILON)
-          == first[unit]->end()) {
-        eps = false; break;
-      }
+  ItemSet* LRZeroClosure(const ItemSet *kernel_item) {/*{{{*/
+    ItemSet *n_itemset = new ItemSet(kernel_item);
+    std::map<ITEM, bool> owned;
+    std::queue<ITEM> item_queue;
+    for(auto item : n_itemset->Items()) {
+      owned[item] = true;
+      item_queue.push(item);
     }
-    if(eps) loks->insert(a);
-    return loks;
-  }
-  std::set<Lok>* FIRST(Item& it) {
-    std::vector<Lok> beta;
-    int h = it.PRODUCT_ID;
-    int b = it.DOT + 1;
-    while(products[h]->Body(b) != -1)
-      beta.push_back(products[h]->Body(b++));
-    return FIRST(beta, it.Lookahead);
-  }/*}}}*/
-
-  // Run bfs to get closure of a kernel itemset
-  Itemset* CLOSURE(Itemset* kernel_itemset) {/*{{{*/
-    Itemset *its = new Itemset();
-    its->Set_number(kernel_itemset->Number());
-    std::map<Item, bool> vis; // Visited or not
-    std::queue<Item> Q;
-    for(auto item : kernel_itemset->Items())
-      Q.push(item);
-    while(!Q.empty()) {
-      Item it = Q.front(); Q.pop();
-      if(vis[it]) continue;
-      vis[it] = true;
-      its->Add_item(it);
-      int head = products[it.PRODUCT_ID]->Body(it.DOT);
-      if(head < NONTERMINAL_BEGIN) continue;
-      std::set<int>* loks = FIRST(it);
-      for(auto prod : products)
-        if(prod->Head() == head)
-          for(auto lo : *loks)
-            Q.push(NEW_ITEM(prod->Number(), 0, lo));
-      delete loks;
+    while(!item_queue.empty()) {
+      ITEM item = item_queue.front();
+      item_queue.pop();
+      n_itemset->AddItem(item);
+      int& product_index = item.PRODUCT_INDEX;
+      int& dot = item.DOT;
+      int head = products[product_index]->Body(dot);
+      if(head >= NONTERMINAL_BEGIN)
+        for(auto product_ptr : products)
+          if(product_ptr->Head() == head) {
+            ITEM item = NEW_ITEM(product_ptr->Number(), 0);
+            if(!owned[item]) {
+              owned[item] = true;
+              item_queue.push(item);
+            }
+          }
     }
-    return its;
+    return n_itemset;
   }/*}}}*/
 
-  Itemset* GOTO(Itemset *I, Unit& unit) {/*{{{*/
-    Itemset *new_kernel_itemset = new Itemset();
-    for(auto item : I->Items()) {
-      int h = item.PRODUCT_ID;
-      int b = item.DOT;
-      if(products[h]->Body(b) != unit.Tag())
-        continue;
-      new_kernel_itemset->Add_item(
-          NEW_ITEM(h, b + 1, item.Lookahead));
+  ItemSet* LRZeroGoto(ItemSet *from, const Unit& unit) {/*{{{*/
+    ItemSet *n_itemset = new ItemSet();
+    for(auto item : from->Items()) {
+      const int& product_index = item.PRODUCT_INDEX;
+      const int& dot = item.DOT;
+      if(products[product_index]->Body(dot) == unit.Tag())
+        n_itemset->AddItem(NEW_ITEM(product_index, dot + 1));
     }
-    Itemset *result = NULL;
-    if(new_kernel_itemset->Size() != 0)
-      result = CLOSURE(new_kernel_itemset);
-    delete new_kernel_itemset;
-    return result;
+    if(n_itemset->Size() == 0) {
+      delete n_itemset;
+      n_itemset = NULL;
+    }
+    return n_itemset;
   }/*}}}*/
 
-  inline bool placed(const STATE& i, const Lok& lok) {/*{{{*/
-    return actions[i][lok] != ACTION_ERROR;
-  }/*}}}*/
-
-  inline bool gen_shift_and_goto(/*{{{*/
-      const STATE& out,
-      const int& unit_tag,
-      const STATE& in) {
-    int lok = units_ptr->Loc(unit_tag);
-    if(placed(out, lok)) {
-      error("Shift conflict : " + std::to_string(out)
-          + " - " + (*units_ptr)[unit_tag]);
+  bool GenerateShiftAndGoto(ItemSet *from, Unit& unit, ItemSet *to) {/*{{{*/
+    const int i = from->Number();
+    const int j = unitset.Index(unit.Tag());
+    if(action_table[i][j] != ACTION_ERROR) {
+      Error(std::string("Shift conflict : ") + '['
+          + std::to_string(i) + ',' + unitset[unit.Tag()]
+          + ']' + " already has " + action_table[i][j]);
       return false;
     }
-    std::string act = "";
-    if(unit_tag < NONTERMINAL_BEGIN) act = "S";
-    actions[out][lok] = act + std::to_string(in);
+    std::string action = "S";
+    if(unit.Tag() >= NONTERMINAL_BEGIN) action = "";
+    action += std::to_string(to->Number());
+    action_table[i][j] = action;
     return true;
   }/*}}}*/
 
-  void init_item_zero() {/*{{{*/
-    Itemset *beg = new Itemset();
-    beg->Add_item(NEW_ITEM(0, 0, '$'));
-    beg->Set_number(itemsets.size());
-    actions.push_back(NEW_ACTION);
-    itemsets.push_back(CLOSURE(beg));
-    delete beg;
+  void GetEpsilonItems(ItemSet *itemset) {/*{{{*/
+    const int& index = itemset->Number();
+    for(auto item : itemset->Items()) {
+      const int& product_index = item.PRODUCT_INDEX;
+      const int& dot = item.DOT;
+      if(products[product_index]->Body(dot) == Tag::EPSILON)
+        itemsets[index]->AddItem(item);
+    }
   }/*}}}*/
 
-  // Run bfs to calculate itemsets
-  // Extra: calculating shift-actions and GOTOs
-  bool gen_LR1_itemsets() {/*{{{*/
-    init_item_zero();
-    std::map<Itemset, STATE, Itemset::Core_cmp> number;
-    std::queue<Itemset*> Q;
-    Q.push(itemsets[0]);
-    number[(*Q.front())] = 0;
-    while(!Q.empty()) {
-      Itemset *I = Q.front(); Q.pop();
-      for(auto unit : units_ptr->Units()) {
-        if(unit.Tag() == Tag::PROGRAM ||
-            unit.Tag() == Tag::EPSILON)
-          continue;
-        Itemset *new_itemset = GOTO(I, unit);
-        if(new_itemset == NULL) continue;
-        int n_state; // GOTO(I, Unit) = n_state
-        if(number.find(*new_itemset) == number.end()) {
-          n_state = number[*new_itemset] = itemsets.size();
-          new_itemset->Set_number(n_state);
-          itemsets.push_back(new_itemset);
-          actions.push_back(NEW_ACTION);
-          Q.push(new_itemset);
+  bool GenerateLRZeroItemSet() {/*{{{*/
+    AddItemSet(new ItemSet(NEW_ITEM(0, 0), 0));
+    std::map<ItemSet, ItemSet*> owned;
+    std::queue<ItemSet*> itemset_queue;
+    itemset_queue.push(itemsets[0]);
+    owned[(*itemsets[0])] = itemsets[0];
+    while(!itemset_queue.empty()) {
+      ItemSet *from = itemset_queue.front();
+      itemset_queue.pop();
+      from = LRZeroClosure(from);
+      GetEpsilonItems(from);
+      for(auto unit : unitset.Units()) {
+        if(!unitset.IsIndexed(unit)) continue;
+        ItemSet *to = LRZeroGoto(from, unit);
+        if(to == NULL) continue;
+        if(owned.find((*to)) == owned.end()) {
+          owned[(*to)] = to;
+          AddItemSet(to);
+          itemset_queue.push(to);
         } else {
-          n_state = number[*new_itemset];
-          delete new_itemset;
+          ItemSet *del = to;
+          to = owned[(*to)];
+          delete del;
         }
-        if(!gen_shift_and_goto(I->Number(), unit.Tag(), n_state))
+        if(!GenerateShiftAndGoto(from, unit, to))
           return false;
       }
     }
     return true;
   }/*}}}*/
 
-  inline bool reduce_item(const Kernel& core) {/*{{{*/
-    const int b = products[core.first]->Body(core.second);
-    return b == -1 || b == Tag::EPSILON;
-  }/*}}}*/
-
-  inline void remove_nonkernel_item() {/*{{{*/
-    for(auto its : itemsets) {
-      for(auto it = its->Items().begin();
-          it != its->Items().end();) {
-        const int& p_id = (*it).PRODUCT_ID;
-        const int& dot = (*it).DOT;
-        if(dot != 0 || p_id == 0 ||
-            products[p_id]->Body(dot) == Tag::EPSILON) {
-          it++; continue;
-        }
-        it = its->Erase(it);
+  LOKSET* FirstBetaA(const std::vector<LOK>& beta, const LOK& a) {/*{{{*/
+    LOKSET* lokset = new LOKSET;
+    bool epsilon = true;
+    for(auto b : beta) {
+      for(auto u : (*first[b]))
+        if(u != Tag::EPSILON)
+          lokset->insert(u);
+      if(first[b]->find(Tag::EPSILON)
+          == first[b]->end()) {
+        epsilon = false; break;
       }
     }
+    if(epsilon) lokset->insert(a);
+    return lokset;
   }/*}}}*/
 
-  bool gen_reduce_actions() {/*{{{*/
-    for(auto I : itemsets) {
-      const int& i = I->Number();
-      for(auto it : I->Items()) {
-        if(!reduce_item(it.Core)) continue;
-        if(placed(i, units_ptr->Loc(it.Lookahead))) {
-          error("Reduce conflict :" + std::to_string(i)
-              + " - " + (*units_ptr)[it.Lookahead]);
-          return false;
+  LOKSET* FirstBetaA(const LRONE_ITEM& lrone_item) {/*{{{*/
+    std::vector<LOK> beta;
+    const int& product_index = lrone_item.LRONE_PRODUCT_INDEX;
+    int body_index = lrone_item.LRONE_DOT + 1;
+    while(products[product_index]->Body(body_index) != -1)
+      beta.push_back(products[product_index]->Body(body_index++));
+    return FirstBetaA(beta, lrone_item.second);
+  }/*}}}*/
+
+  LRONE_ITEMSET* LROneClosure(const ITEM& item) {/*{{{*/
+    LRONE_ITEMSET *n_lrone_itemset = new LRONE_ITEMSET;
+    std::queue<LRONE_ITEM> lrone_item_queue;
+    lrone_item_queue.push(NEW_LRONE_ITEM(item, '#'));
+    while(!lrone_item_queue.empty()) {
+      LRONE_ITEM lrone_item = lrone_item_queue.front();
+      lrone_item_queue.pop();
+      n_lrone_itemset->insert(lrone_item);
+      const int& product_index = lrone_item.LRONE_PRODUCT_INDEX;
+      const int& dot = lrone_item.LRONE_DOT;
+      const int head = products[product_index]->Body(dot);
+      LOKSET *lokset = FirstBetaA(lrone_item);
+      for(auto product_ptr : products)
+        if(product_ptr->Head() == head) {
+          ITEM n_item = NEW_ITEM(product_ptr->Number(), 0);
+          for(auto lok : (*lokset)) {
+            LRONE_ITEM n_lrone_item = NEW_LRONE_ITEM(n_item, lok);
+            if(n_lrone_itemset->find(n_lrone_item) 
+                == n_lrone_itemset->end())
+              lrone_item_queue.push(n_lrone_item);
+          }
         }
-        std::string ac;
-        if(it.PRODUCT_ID == 0) ac = "ACC";
-        else ac = "R" + std::to_string(it.PRODUCT_ID);
-        actions[i][units_ptr->Loc(it.Lookahead)] = ac;
+      delete lokset;
+    }
+    return n_lrone_itemset;
+  }/*}}}*/
+
+  // Because that shift actions and goto actions
+  // are generated by GenerateLRZeoroItemSet() and
+  // that lookahead has no effect on determining shift
+  // actions and goto actions, we can get GOTO(I, X)
+  // by reading action_table builded before.
+  int LROneGoto(const int& I, const int& X) {/*{{{*/
+    if(X == -1) return -1;
+    if(!unitset.IsIndexed(X)) return I;
+    std::string& action = action_table[I][unitset.Index(X)];
+    if(action == ACTION_ERROR) return -1;
+    if(action[0] != 'S') return std::stoi(action);
+    return std::stoi(action.substr(1, action.size()));
+  }/*}}}*/
+
+  Graph* DetermineLookahead() {/*{{{*/
+    Graph *propagate_graph = new Graph();
+    for(auto I : itemsets) {
+      const int state = I->Number();
+      for(auto kernel_item : I->Items()) {
+        LOKSET *from= I->LokSet(kernel_item);
+        propagate_graph->AddNode(from);
+        LRONE_ITEMSET *J = LROneClosure(kernel_item);
+        for(auto lrone_item : (*J)) {
+          const int& product_index = lrone_item.LRONE_PRODUCT_INDEX;
+          const int& dot = lrone_item.LRONE_DOT;
+          const int X = products[product_index]->Body(dot);
+          // GOTO(I, X) = K
+          const int K = LROneGoto(I->Number(), X);
+          if(K == -1) continue; // K == -1 means ERROR
+          ITEM n_item = lrone_item.LRONE_KERNEL;
+          if(X != Tag::EPSILON) n_item.DOT++;
+          LOKSET *to = itemsets[K]->LokSet(n_item);
+          if(lrone_item.LRONE_LOK == '#')
+            propagate_graph->AddEdge(from, to);
+          else
+            to->insert(lrone_item.LRONE_LOK);
+        }
+        delete J;
+      }
+    }
+    return propagate_graph;
+  }/*}}}*/
+
+  bool GenerateLALROneItemSet() {/*{{{*/
+    Graph *propagate_graph = DetermineLookahead();
+    std::queue<LOKSET*> lokset_queue;
+    for(auto lokset : propagate_graph->Nodes())
+      if(!lokset->empty()) lokset_queue.push(lokset);
+    while(!lokset_queue.empty()) {
+      LOKSET *from = lokset_queue.front();
+      lokset_queue.pop();
+      for(auto to : propagate_graph->EdgesOfNode(from)) {
+        const int& sz = to->size();
+        MoveSetToSet(from, to);
+        if(to->size() != sz)
+          lokset_queue.push(to);
+      }
+    }
+    delete propagate_graph;
+    return true;
+  }/*}}}*/
+
+  bool GetAllBodies(const ITEM& item) {/*{{{*/
+    Product *product = products[item.PRODUCT_INDEX];
+    if(product->Body(0) == Tag::EPSILON) return true;
+    return item.DOT == product->BodySize();
+  }/*}}}*/
+ 
+  bool GenerateReduce() {/*{{{*/
+    for(auto itemset : itemsets) {
+      const int& i = itemset->Number();
+      for(auto item : itemset->Items()) {
+        if(!GetAllBodies(item)) continue;
+        for(auto lok : (*itemset->LokSet(item))) {
+          const int& j = unitset.Index(lok);
+          if(action_table[i][j] != ACTION_ERROR) {
+            Error(std::string("Conflict : ") + '['
+                + std::to_string(i) + ',' + unitset[lok]
+                + "] already has " + action_table[i][j]);
+            return false;
+          }
+          std::string action = "R";
+          if(item.PRODUCT_INDEX == 0) action = "ACC";
+          else action += std::to_string(item.PRODUCT_INDEX);
+          action_table[i][j] = action;
+        }
       }
     }
     return true;
