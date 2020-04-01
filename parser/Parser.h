@@ -1,19 +1,12 @@
 
-#include <iostream>
-#include <functional>
-#include <stack>
-#include <string>
-#include <vector>
-
 #include "Action.h"
 #include "Element.h"
 
-#include "../bin/Functions.h"
-#include "../bin/Messages.h"
-#include "../bin/Stack.h"
+#include "../bin/Bin.h"
 #include "../lexer/Lexer.h"
 #include "../symbol/Env.h"
 #include "../symbol/Id.h"
+#include "../symbol/UnitSet.h"
 using namespace lexer;
 using namespace symbol;
 
@@ -21,14 +14,6 @@ using namespace symbol;
 #define _PARSER_H_
 
 namespace parser {
-
-#define ENTRY_TYPE std::pair<ENTRY, Type*>
-#define STACK_PUSH(state, nonterminal) \
-  e_stack->Push(Element(state, nonterminal))
-#define STACK_POP(states_size) \
-  for(int i = 0; i < states_size; i++) { \
-    e_stack->Pop(); \
-  }
 
 class Parser {
 
@@ -38,32 +23,30 @@ public:
     lex = new Lexer();
     action = new Action();
     e_stack = new Stack<Element>;
-    reduce_funcs = new std::vector<std::function<void*()> >;
-    reduce_funcs->push_back(NULL); // Accepted
-    reduce_funcs->push_back(std::bind(&Reduce_01, this));
-    reduce_funcs->push_back(std::bind(&Reduce_02, this));
-    reduce_funcs->push_back(std::bind(&Reduce_03, this));
-    reduce_funcs->push_back(std::bind(&Reduce_04, this));
-    reduce_funcs->push_back(std::bind(&Reduce_05, this));
-    reduce_funcs->push_back(std::bind(&Reduce_06, this));
-    reduce_funcs->push_back(std::bind(&Reduce_07, this));
-    reduce_funcs->push_back(std::bind(&Reduce_08, this));
-    reduce_funcs->push_back(std::bind(&Reduce_09, this));
-    reduce_funcs->push_back(std::bind(&Reduce_10, this));
-    reduce_funcs->push_back(std::bind(&Reduce_11, this));
-    reduce_funcs->push_back(std::bind(&Reduce_12, this));
-    reduce_funcs->push_back(std::bind(&Reduce_13, this));
-    reduce_funcs->push_back(std::bind(&Reduce_14, this));
-    reduce_funcs->push_back(std::bind(&Reduce_15, this));
-    reduce_funcs->push_back(std::bind(&Reduce_16, this));
-    reduce_funcs->push_back(std::bind(&Reduce_17, this));
+    reduce_funcs.push_back(NULL); // Accepted
+    reduce_funcs.push_back(std::bind(&Reduce_01, this));
+    reduce_funcs.push_back(std::bind(&Reduce_02, this));
+    reduce_funcs.push_back(std::bind(&Reduce_03, this));
+    reduce_funcs.push_back(std::bind(&Reduce_04, this));
+    reduce_funcs.push_back(std::bind(&Reduce_05, this));
+    reduce_funcs.push_back(std::bind(&Reduce_06, this));
+    reduce_funcs.push_back(std::bind(&Reduce_07, this));
+    reduce_funcs.push_back(std::bind(&Reduce_08, this));
+    reduce_funcs.push_back(std::bind(&Reduce_09, this));
+    reduce_funcs.push_back(std::bind(&Reduce_10, this));
+    reduce_funcs.push_back(std::bind(&Reduce_11, this));
+    reduce_funcs.push_back(std::bind(&Reduce_12, this));
+    reduce_funcs.push_back(std::bind(&Reduce_13, this));
+    reduce_funcs.push_back(std::bind(&Reduce_14, this));
+    reduce_funcs.push_back(std::bind(&Reduce_15, this));
+    reduce_funcs.push_back(std::bind(&Reduce_16, this));
+    reduce_funcs.push_back(std::bind(&Reduce_17, this));
   }
   ~Parser() {
     delete env;
     delete lex;
     delete action;
     delete e_stack;
-    delete reduce_funcs;
   }/*}}}*/
 
   bool Build(const char* regular_definations, /*{{{*/
@@ -74,16 +57,18 @@ public:
   }/*}}}*/
 
   bool Analyze(const char* source_code) {/*{{{*/
-    if(!lex->Analyze(source_code))
-      return false; 
-    e_stack->Push(Element(0, NULL));
+    if(!lex->Analyze(source_code)) return false; 
+    e_stack->Push(Element(0, KeyWords::End));
     lok = lex->Next_terminal();
     while(true) {
-      const STATE& s = e_stack->Top().State();
+      const ACTION_STATE& s = e_stack->Top().State();
       const int& t = lok->Tag();
       const std::string& ac = action->ACTION(s, t);
       CurrentState(ac);
-      if(ac[0] == 'S') {
+      if(ac == ACCEPTED) {
+        Print("ACCEPTED! NO ERROE! CONGRATULATIONS!"); 
+        break; 
+      } else if(ac[0] == 'S') {
         const int && n_state = std::stoi(ac.substr(1, ac.size()));
         e_stack->Push(Element(n_state, lok));
         lok = lex->Next_terminal();
@@ -110,24 +95,24 @@ private:
   // parser
   Action *action;
   Stack<Element>* e_stack;
-  std::vector<std::function<void*()> >* reduce_funcs;
+  std::vector<std::function<void*()> > reduce_funcs;
   // inter
   int entry_Size;
 
 private:
   void CurrentState(const std::string& ac) {/*{{{*/
-    int left = 64;
+    int left = 48;
     for(int i = e_stack->Size(); i; i--) {
       int s = (*e_stack)[-i].State();
       std::cout << s << ' ';
       left -= 1 + std::to_string(s).size();
     }
     for(int i = 0; i < left; i++) std::cout << ' ';
-    left = 64;
-    std::cout << action->Units()[((Unit*)lok)->Tag()] << ' ';
+    left = 72;
+    std::cout << action->Units()[((Unit*)lok)->Tag()] << '\t';
     left -= 1 + action->Units()[((Unit*)lok)->Tag()].size();
-    for(int i = -1; i > -e_stack->Size(); i--) {
-      Unit *uptr = (Unit*)GetElement(i);
+    for(int i = 1; i <= e_stack->Size(); i++) {
+      Unit *uptr = (Unit*)GetElement(-i);
       left -= action->Units()[uptr->Tag()].size() + 1;
       std::cout << action->Units()[uptr->Tag()] << ' ';
     }
@@ -136,13 +121,12 @@ private:
   }/*}}}*/
 
   inline void Shift(/*{{{*/
-      const STATE& state, void* input_ptr) {
+      const ACTION_STATE& state, void* input_ptr) {
     e_stack->Push(Element(state, input_ptr));
   }/*}}}*/
 
-  inline int Goto(const STATE& s, Unit* unit) {/*{{{*/
-    const std::string& ac =
-      action->ACTION(s, unit->Tag());
+  inline int Goto(const ACTION_STATE& s, Unit* unit) {/*{{{*/
+    const std::string& ac = action->ACTION(s, unit->Tag());
     if(ac == ACTION_ERROR) return -1;
     return std::stoi(ac);
   }/*}}}*/
@@ -182,14 +166,14 @@ private:
   }/*}}}*/
 
   inline bool Reduce(const int& prod_id) {/*{{{*/
-    void* n_unit = (*reduce_funcs)[prod_id]();
+    void* n_unit = reduce_funcs[prod_id]();
     if(n_unit == NULL) return false;
-    int n_state =
-      Goto(e_stack->Top().State(), (Unit*)n_unit);
+    int n_state = Goto(e_stack->Top().State(), (Unit*)n_unit);
     STACK_PUSH(n_state, n_unit);
     return true;
   }/*}}}*/
 
+  //TODO BUG
   // Stmts -> Stmt Stmts
   void* Reduce_01() {/*{{{*/
     Stmts *n_stmts = new Stmts();
@@ -212,7 +196,7 @@ private:
     Type *type = (Type*)GetElement(-3);
     Terminal *word = (Terminal*)GetElement(-2);
     /*------------Semantic Action------------*/
-    if(env->Find(word)) {
+    if(env->InScope(word)) {
       bin::Error(word->Lexeme() + " is defined!\n");
       return NULL;
     }
@@ -223,14 +207,13 @@ private:
     return n_stmt;
   }/*}}}*/
 
-  //TODO BUG
   // Stmt -> TYPE ID = Expr ;
   void* Reduce_04() {/*{{{*/
     Type *type = (Type*)GetElement(-5);
     Terminal *word = (Terminal*)GetElement(-4);
     Expr *expr = (Expr*)GetElement(-2);
     /*------------Semantic Action------------*/
-    if(env->Find(word)) {
+    if(env->InScope(word)) {
       bin::Error(word->Lexeme() + " has been defined!\n");
       return NULL;
     }
@@ -253,7 +236,7 @@ private:
     Terminal *word = (Terminal*)GetElement(-4);
     Expr *expr = (Expr*)GetElement(-2);
     /*------------Semantic Action------------*/
-    Id *id = env->Get(word->Lexeme());
+    Id *id = env->GetId(word->Lexeme());
     if(id == NULL) {
       bin::Error(word->Lexeme() + " is not defined!");
       return NULL;
@@ -332,8 +315,7 @@ private:
     Term *term = (Term*)GetElement(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
-    Expr *n_expr =
-      new Expr(term->Entry(), term->Type());
+    Expr *n_expr = new Expr(term->Entry(), term->Type());
     STACK_POP(1);
     return n_expr;
   }/*}}}*/
@@ -367,8 +349,7 @@ private:
     Unary *unary = (Unary*)GetElement(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
-    Term *n_term =
-      new Term(unary->Entry(), unary->Type());
+    Term *n_term = new Term(unary->Entry(), unary->Type());
     STACK_POP(1);
     return n_term;
   }/*}}}*/
@@ -412,7 +393,7 @@ private:
   void* Reduce_15() {/*{{{*/
     Terminal *word = (Terminal*)GetElement(-1);
     /*------------Semantic Action------------*/
-    Id *id = env->Get(word->Lexeme());
+    Id *id = env->GetId(word->Lexeme());
     if(id == NULL) {
       bin::Error(word->Lexeme() + " is not defined!");
       return NULL;
@@ -430,18 +411,18 @@ private:
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Factor *n_factor =
-      new Factor(_int->Lexeme(), env->Type("int"));
+      new Factor(_int->Lexeme(), env->GetType("int"));
     STACK_POP(1);
     return n_factor;
   }/*}}}*/
 
   // Factor -> FLOAT
   void* Reduce_17() {/*{{{*/
-    Float *_float = (Float*)GetElement(-1);
+    Real *_float = (Real*)GetElement(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Factor *n_factor =
-      new Factor(_float->Lexeme(), env->Type("float"));
+      new Factor(_float->Lexeme(), env->GetType("float"));
     STACK_POP(1);
     return n_factor;
   }/*}}}*/
