@@ -18,7 +18,7 @@ public:
     return tag < unit.tag;
   }
 
-  const int& Tag() const { return tag; }
+  const TAG& Tag() const { return tag; }
 
 protected:
   int tag;

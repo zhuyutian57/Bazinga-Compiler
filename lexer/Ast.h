@@ -1,15 +1,7 @@
 
-#include <set>
-#include <sstream>
-#include <stack>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "Node.h"
 
-#include "../bin/Functions.h"
-#include "../bin/Messages.h"
+#include "../bin/Bin.h"
 using namespace bin;
 
 #ifndef _AST_H_
@@ -17,10 +9,50 @@ using namespace bin;
 
 namespace lexer {
 
-// Abstract Syntax Tree 
 class Ast {
 
-private:  
+public:
+  Ast() : leaf_size(-1), lexeme_tree(NULL) {/*{{{*/
+    mpr["letters"] = BuildLetterTree();
+    mpr["digits"] = BuildDigitTree();
+  }
+  ~Ast() {
+    if(lexeme_tree != NULL)
+      delete lexeme_tree;
+  }/*}}}*/
+
+  bool Build(const char* rd_path) {/*{{{*/
+    if(!BuildTrees(rd_path)) return false;
+    lexeme_tree = new Node(CAT, mpr["Lexeme"], new Node('#'));
+    Info* root = Calculate(lexeme_tree);
+    MoveSetToSet(root->firstpos, &root_firstpos);
+    delete root;
+    return true;
+  }/*}}}*/
+
+  int LeafSize() { return leaf_size; }
+  const std::set<int>& RootFirstpos() {
+    return root_firstpos;
+  }
+  const std::set<char>& Characters() {
+    return characters;
+  }
+  char CharOfPosition(int i) { return posch[i]; }
+  const std::vector<std::set<int>* >& Followpos() {
+    return followpos;
+  }
+  
+private:
+  Node *lexeme_tree;
+  // Reserve trees of every regular definations
+  std::unordered_map<std::string, Node*> mpr;
+
+  int leaf_size;
+  std::set<int> root_firstpos;
+  std::set<char> characters;
+  std::unordered_map<int, char> posch;
+  std::vector<std::set<int>* > followpos;
+
   struct Info {
     bool nullable;
     std::set<int> *firstpos, *lastpos;
@@ -33,56 +65,6 @@ private:
     }
   }; // struct Info
 
-public:
-  Ast() : leaf_size(-1), lexeme_tree(NULL) {/*{{{*/
-    mpr["letters"] = BuildLetterTree();
-    mpr["digits"] = BuildDigitTree();
-    root_firstpos = new std::set<int>;
-    posch = new std::unordered_map<int, char>;
-    characters = new std::set<char>;
-  }
-  ~Ast() {
-    delete posch, characters;
-    delete root_firstpos;
-    if(lexeme_tree != NULL)
-      delete lexeme_tree;
-  }/*}}}*/
-
-  bool Build(const char* rd_path) {/*{{{*/
-    if(!BuildTrees(rd_path)) return false;
-    lexeme_tree = new Node(CAT, mpr["Lexeme"], new Node('#'));
-    Info* root = Calculate(lexeme_tree);
-    MoveSetToSet(root->firstpos, root_firstpos);
-    delete root;
-    return true;
-  }/*}}}*/
-
-  int Leaf_size() { return leaf_size; }
-  const std::set<int>* Root_firstpos() {
-    return root_firstpos;
-  }
-  const std::set<char>* Characters() {
-    return characters;
-  }
-  char Posch(int i) {
-    return (*posch)[i];
-  }
-  const std::vector<std::set<int>* >& Followpos() {
-    return followpos;
-  }
-  
-private:
-  Node *lexeme_tree;
-  // Reserve trees of every regular definations
-  std::unordered_map<std::string, Node*> mpr;
-
-  int leaf_size;
-  std::set<int>* root_firstpos;
-  std::set<char>* characters;
-  std::unordered_map<int, char>* posch;
-  std::vector<std::set<int>* > followpos;
-
-private:
   //TODO So ugly, make it beautiful
   Node* CreateNode(const std::string& s) {/*{{{*/
     if(s == "(") return new Node(LBR);
@@ -105,10 +87,10 @@ private:
     delete del; // delete extra node labeled "SUBT"
     while(!S->empty() && S->top()->Nt() != LBR) {
       if(S->top()->Nt() == OR) {
-        S->top()->Set_rs(p);
+        S->top()->SetRs(p);
         p = S->top(); S->pop();
         del = S->top(); S->pop();
-        p->Set_ls(del->Ls());
+        p->SetLs(del->Ls());
       } else {
         del = S->top(); S->pop();
         p = new Node(CAT, del->Ls(), p);
@@ -135,7 +117,7 @@ private:
         case LBR: break;
         case SUBT: break;
         default: // FOr PLUS and STAR
-          t->Set_ls(S->top()->Ls());
+          t->SetLs(S->top()->Ls());
           delete S->top(); S->pop();
           t = new Node(SUBT, t, NULL);
       }
@@ -217,8 +199,8 @@ private:
         info->nullable = false;
         info->firstpos->insert(leaf_size);
         info->lastpos->insert(leaf_size);
-        (*posch)[leaf_size] = p->Ch();
-        characters->insert(p->Ch());
+        posch[leaf_size] = p->Ch();
+        characters.insert(p->Ch());
         followpos.push_back(new std::set<int>);
         break;
       case STAR: {

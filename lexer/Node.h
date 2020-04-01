@@ -7,10 +7,7 @@
 
 namespace lexer {
 
-// AST node
-enum NodeType {
-  LEAF, STAR, CAT, OR, PLUS,
-  SUBT, LBR, RBR }; // Used for build trees
+enum NodeType {LEAF, STAR, CAT, OR, PLUS, SUBT, LBR, RBR };
 
 class Node {
 
@@ -25,8 +22,8 @@ public:
   Node* Ls() const { return ls; }
   Node* Rs() const { return rs; }
   
-  void Set_ls(Node *t) { ls = t; }
-  void Set_rs(Node *t) { rs = t; }
+  void SetLs(Node *t) { ls = t; }
+  void SetRs(Node *t) { rs = t; }
 
 private:
   NodeType nt;

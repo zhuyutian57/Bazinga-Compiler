@@ -1,13 +1,9 @@
 
-#include <fstream>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "Automata.h"
-#include "Float.h"
-#include "Integer.h"
-#include "Type.h"
+
+#include "../symbol/UnitSet.h"
+#include "../symbol/KeyWords.h"
+using namespace symbol;
 
 #ifndef _LEXER_H_
 #define _LEXER_H_
@@ -16,7 +12,54 @@ namespace lexer {
 
 class Lexer {
 
+public:
+  Lexer() : cur(0) {/*{{{*/
+    dfa = new Automata();
+    
+    Reserve(new Terminal(';')); Reserve(new Terminal('+'));
+    Reserve(new Terminal('-')); Reserve(new Terminal('*'));
+    Reserve(new Terminal('/')); Reserve(new Terminal('='));
+    Reserve(new Terminal('(')); Reserve(new Terminal(')'));
+    
+    Reserve(KeyWords::Int);
+    Reserve(KeyWords::Float);
+  }
+  ~Lexer() {
+    for(auto p : words) {
+      Unit* uptr = (Unit*)p.second;
+      if(uptr->Tag() != Tag::TYPE)
+        delete uptr;
+    }
+    delete dfa;
+  }/*}}}*/
+
+  bool Build(const char* regular_definations) {/*{{{*/
+    dfa->Build(regular_definations);
+    return true;
+  }/*}}}*/
+
+  bool Analyze(const char* source_codes) {/*{{{*/
+    if(!AnalyzeSourceCode(source_codes)) {
+      Error("Fail to build DFA!");
+      return false;
+    }
+    InformationsOfTokens();
+    tokens.push_back(KeyWords::End);
+    return true;
+  }/*}}}*/
+
+  // Return a terminal everytime
+  Terminal* Next_terminal() {/*{{{*/
+    return (Terminal*)tokens[cur++];
+  }/*}}}*/
+
 private:
+  Automata *dfa;
+  std::vector<void*> tokens;
+  std::unordered_map<std::string, void*> words; 
+
+  int cur;
+
   struct Buf {/*{{{*/
     int cur;
     std::vector<char> chv;
@@ -38,79 +81,31 @@ private:
     }
   }; // struct Buf}}}
 
-public:
-  Lexer() : cur(0) {/*{{{*/
-    dfa = new Automata();
-    words = new std::unordered_map<std::string, void*>;
-    tokens = new std::vector<void*>;
-   
-    reserve(new Terminal(';')); reserve(new Terminal('+'));
-    reserve(new Terminal('-')); reserve(new Terminal('*'));
-    reserve(new Terminal('/')); reserve(new Terminal('='));
-    reserve(new Terminal('(')); reserve(new Terminal(')'));
-    reserve(new Type("int", Tag::TYPE, 4));
-    reserve(new Type("float", Tag::TYPE, 8));
-  }
-  ~Lexer() {
-    for(auto p : (*words)) {
-      Unit* ptr = (Unit*)p.second;
-      if(ptr->Tag() != Tag::TYPE)
-        delete ptr;
-    }
-    delete dfa, words, tokens;
-  }/*}}}*/
-
-  bool Build(const char* regular_definations) {/*{{{*/
-    dfa->Build(regular_definations);
-    return true;
-  }/*}}}*/
-
-  bool Analyze(const char* source_codes) {/*{{{*/
-    if(!analyze(source_codes)) {
-      Error("Fail to build DFA!");
-      return false;
-    }
-    bin::InfoLexer(words, tokens);
-    tokens->push_back(new Terminal(Tag::END));
-    return true;
-  }/*}}}*/
-
-  // Return a terminal everytime
-  Terminal* Next_terminal() {/*{{{*/
-    return (Terminal*)(*tokens)[cur++];
-  }/*}}}*/
 
 private:
-  Automata *dfa;
-  std::unordered_map<std::string, void*>* words; 
-  std::vector<void*>* tokens;
-
-  int cur;
-
-private:
-  inline void reserve(const Terminal* w) {/*{{{*/
-    (*words)[w->Lexeme()] = (void*)w;
+  inline void Reserve(const Terminal* w) {/*{{{*/
+    words[w->Lexeme()] = (void*)w;
   }/*}}}*/
 
-  void add_new_word(const std::string& word) {/*{{{*/
+  void AddNewWord(const std::string& word) {/*{{{*/
     if(word[0] >= '0' && word[0] <= '9') {
       if(word.find('.') != std::string::npos) {
-        reserve(new Float(word));
+        Reserve(new Real(word));
       } else {
-        reserve(new Integer(word));
+        Reserve(new Integer(word));
       }
     } else {
-      reserve(new Terminal(word, symbol::Tag::ID));
+      Reserve(new Terminal(word, Tag::ID));
     }
   }/*}}}*/
 
-  void recognize(const std::string& word) {/*{{{*/
-    if(words->find(word) == words->end())
-      add_new_word(word);
-    tokens->push_back((*words)[word]);
+  void Recognize(const std::string& word) {/*{{{*/
+    if(words.find(word) == words.end())
+      AddNewWord(word);
+    tokens.push_back(words[word]);
   }/*}}}*/
 
-  bool analyze(const char* source_code) {/*{{{*/
+  bool AnalyzeSourceCode(const char* source_code) {/*{{{*/
     Buf buf(source_code);
     // Read a word every circulation
     while(!buf.eof()) {
@@ -121,16 +116,28 @@ private:
       int beg = buf.tellg();
       int end = beg - 1;
       while(!buf.eof() && dfa->Goto(buf.peek()) != -1) {
-        if(dfa->Accepted())
-          end = buf.tellg();
+        if(dfa->Accepted()) end = buf.tellg();
         buf.ignore(1);
       }
       if(beg > end) return false;
-      recognize(buf.get(beg, end - beg + 1));
+      Recognize(buf.get(beg, end - beg + 1));
       buf.seekg(end + 1);
     }
     return true;
   }/*}}}*/
+
+  void InformationsOfTokens() {/*{{{*/
+    std::cout << " Token stream : \n";
+    std::string sym = ";+-*/=()";
+    for(auto addr : tokens) {
+      Unit *t = (Unit*)addr;
+      Terminal *p = (Terminal*)addr;
+      std::cout << '<' << p->Tag() << ',';
+      std::cout << '\t' << p->Lexeme() << ',';
+      std::cout << '\t' << words[p->Lexeme()] << ">\n";
+    }
+  }/*}}}*/
+
 
 }; // class Lexer
 

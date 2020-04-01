@@ -1,46 +1,16 @@
 
-#include <iostream>
-#include <map>
-#include <queue>
-#include <set>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "Expr.h"
-#include "Factor.h"
-#include "Itemset.h"
+#include "ItemSet.h"
 #include "Product.h"
-#include "Stmt.h"
-#include "Stmts.h"
-#include "Term.h"
-#include "Unary.h"
 
-#include "../bin/Functions.h"
-#include "../bin/Graph.h"
-#include "../bin/Messages.h"
+#include "../bin/Bin.h"
 #include "../symbol/UnitSet.h"
-
 using namespace bin;
+using namespace symbol;
 
 #ifndef _ACTION_H_
 #define _ACTION_H_
 
 namespace parser {
-
-#define LRONE_KERNEL                first
-#define LRONE_LOK                   second
-#define LRONE_PRODUCT_INDEX         first.first
-#define LRONE_DOT                   first.second
-#define LRONE_ITEM                  std::pair<ITEM, LOK>
-#define NEW_LRONE_ITEM(item, lok)   std::make_pair(item, lok)
-#define LRONE_ITEMSET               std::set<LRONE_ITEM>
-#define STATE                       int
-#define ACTION_ERROR                "ERROR"
-#define ACTION_SET                  std::vector<std::string>
-#define NEW_ACTION_SET \
-  ACTION_SET(unitset.Size() - 2, ACTION_ERROR)
 
 class Action {
 
@@ -50,16 +20,16 @@ public:
 
   bool Build(const char* grammars) {/*{{{*/
     if(!GenerateActionTable(grammars)) return false;
-    InfoAction(unitset, first, products, itemsets, action_table);
+    Informations();
     return true;
   }/*}}}*/
 
   const std::string& ACTION(/*{{{*/
-      const STATE& s, const LOK& lok) {
+      const ACTION_STATE& s, const LOK& lok) {
     return action_table[s][unitset.Index(lok)];
   }/*}}}*/
 
-  symbol::UnitSet& Units() { return unitset; }
+  UnitSet& Units() { return unitset; }
 
 private:
   UnitSet unitset;
@@ -381,6 +351,100 @@ private:
     }
     return true;
   }/*}}}*/
+
+  void InformationOfProducts() {/*{{{*/
+    const std::string label = "PRODUCTS";
+    int side_space = 16;
+    PrintLabel(side_space, label, '=');
+    for(auto prod : products) {
+      std::cout << "  " << prod->Number() << " . ";
+      std::cout << unitset[prod->Head()] << " ->";
+      for(int i = 0, j; j = prod->Body(i) ;i++) {
+        if(j == -1) break;
+        std::cout << ' ' << unitset[j];
+      }
+      std::cout << '\n';
+    }
+    PrintLabel(side_space, label, '=');
+  }/*}}}*/
+
+  void InformationOfFirstSets() {/*{{{*/
+    const std::string label = "FIRST SETS";
+    int side_space = 16;
+    PrintLabel(side_space, label, '=');
+    for(auto f : first) {
+      if(f.second->size() == 0) continue;
+      std::cout << " - "<< unitset[f.first] << " :";
+      for(auto tag : (*f.second))
+        std::cout << ' ' << unitset[tag];
+      std::cout << '\n';
+    }
+    PrintLabel(side_space, label, '=');
+  }/*}}}*/
+
+  void InformationOfItemSets() {/*{{{*/
+    const std::string label = "ITEMSETS";
+    int side_space = 16;
+    PrintLabel(side_space, label, '=');
+    for(auto itemset : itemsets) {
+      std::cout << " No." << itemset->Number();
+      std::cout << " with " << itemset->Size() << " items\n";
+      std::cout << " - Kernel Item:\n";
+      for(auto item : itemset->Items()) {
+        std::cout << " - " << item.PRODUCT_INDEX << ' '
+          << item.DOT << " ,";
+        for(auto lok : *itemset->LokSet(item))
+          std::cout << ' ' << unitset[lok];
+        std::cout << '\n';
+      }
+      std::cout << " - Shifts & Gotoes:\n";
+      int state = itemset->Number();
+      for(auto unit : unitset.Units()) {
+        if(!unitset.IsIndexed(unit.Tag())) continue;
+        int lo = unitset.Index(unit.Tag());
+        if(action_table[state][lo] != "ERROR")
+          std::cout << " - " << unitset[unit.Tag()] << ' '
+            << action_table[state][lo] << '\n';
+      }
+      std::cout << '\n';
+    }
+    PrintLabel(side_space, label, '=');
+  }/*}}}*/
+
+  void InformationOfActionTable() {/*{{{*/
+    const std::string label = "ATION TABLE";
+    int side_space = (unitset.Size() - 2) * WIDTH + 4;
+    side_space -= label.size();
+    side_space = (side_space + 1) / 2;
+    PrintLabel(side_space, label, '=');
+    FORMAT; std::cout << "State";
+    for(auto unit : unitset.Units()) {
+      if(unit.Tag() == Tag::EPSILON) continue;
+      if(unit.Tag() == Tag::PROGRAM) continue;
+      FORMAT; std::cout << unitset[unit.Tag()];
+    }
+    std::cout << '\n';
+    int number = 0;
+    for(auto actions : action_table) {
+      FORMAT; std::cout << number++;
+      for(auto action : actions) {
+        FORMAT;
+        if(action != "ERROR")
+          std::cout << action;
+        else std::cout << "-";
+      }
+      std::cout << '\n';
+    }
+    PrintLabel(side_space, label, '=');
+  }/*}}}*/
+
+  void Informations() {/*{{{*/
+    InformationOfProducts();
+    InformationOfFirstSets();
+    InformationOfItemSets();
+    InformationOfActionTable();
+  }/*}}}*/
+
 
 }; // class Action
 

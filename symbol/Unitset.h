@@ -1,10 +1,10 @@
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "Tag.h"
 #include "Unit.h"
+
+#include "../bin/Bin.h"
+#include "./nonterminals/Nonterminals.h"
+#include "./terminals/Terminals.h"
 
 #ifndef _UNITSET_H_
 #define _UNITSET_H_
@@ -14,17 +14,17 @@ namespace symbol {
 class UnitSet {
 
 public:
-  UnitSet() : index(0) {/*{{{*/
+  UnitSet() {/*{{{*/
     // Terminals
     Reserve("TYPE", Tag::TYPE);
     Reserve("ID", Tag::ID);
     Reserve("INTEGER", Tag::INTEGER);
-    Reserve("FLOAT", Tag::FLOAT);
+    Reserve("FLOAT", Tag::REAL);
     Reserve('+'); Reserve('-');
     Reserve('*'); Reserve('/');
     Reserve(';'); Reserve('=');
     Reserve('('); Reserve(')');
-    Reserve('$');
+    Reserve("$", Tag::END);
     Reserve("Epsilon", Tag::EPSILON);
     // Nonterminals
     Reserve("Program", Tag::PROGRAM);
@@ -76,7 +76,6 @@ private:
   void Reserve(const char ch) {
     Reserve(std::string("") + ch, ch);
   }/*}}}*/
-
 
 }; // class Unitset
 

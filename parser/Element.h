@@ -1,10 +1,6 @@
 
-#include "Expr.h"
-#include "Factor.h"
-#include "Stmt.h"
-#include "Stmts.h"
-#include "Term.h"
-#include "Unary.h"
+#include "../symbol/UnitSet.h"
+using namespace symbol;
 
 #ifndef _ELEMENT_H_
 #define _ELEMENT_H_

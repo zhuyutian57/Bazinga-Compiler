@@ -1,24 +1,11 @@
 
-#include <map>
-#include <set>
-#include <utility>
-#include <vector>
+#include "../bin/Bin.h"
+using namespace bin;
 
 #ifndef _ITEMSET_H_
 #define _ITEMSET_H_
 
 namespace parser {
-
-//LR0 item
-#define ITEM            std::pair<int, int>
-#define NEW_ITEM(product_index, dot) \
-  std::make_pair(product_index, dot)
-#define ITEMSET         std::set<ITEM>
-#define LOK             int
-#define LOKSET          std::set<LOK>
-#define ITEM_TO_LOKSET  std::map<ITEM, LOKSET*>
-#define PRODUCT_INDEX   first
-#define DOT             second
 
 class ItemSet {
 

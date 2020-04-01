@@ -28,7 +28,6 @@ const double eps = 1e-6;
 const int mod = 1000000007;
 
 #include "../parser/Parser.h"
-#include "../symbol/Env.h"
 
 int main() {
 	//freopen("in.txt","r",stdin);
