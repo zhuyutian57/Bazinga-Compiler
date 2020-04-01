@@ -4,12 +4,14 @@
 #ifndef _FACTOR_H_
 #define _FACTOR_H_
 
-namespace parser {
+namespace symbol {
+
+inline namespace nonterminals {
 
 class Factor : public Expr {
 
 public:
-  Factor(const ENTRY& entry, lexer::Type *type)
+  Factor(const ENTRY& entry, terminals::Type *type)
     : Expr(entry, type, Tag::FACTOR) {}
   ~Factor() {}
 
@@ -17,6 +19,8 @@ private:
 
 }; // class Factor
 
-} // namespace Parser
+} // namespace nonterminals
+
+} // namespace symbol
 
 #endif

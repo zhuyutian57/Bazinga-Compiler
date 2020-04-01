@@ -4,7 +4,9 @@
 #ifndef _STMTS_H_
 #define _STMTS_H_
 
-namespace parser {
+namespace symbol {
+
+inline namespace nonterminals {
 
 class Stmts : public Nonterminal {
 
@@ -16,6 +18,8 @@ private:
 
 }; // class Stmts
 
-} // namespace Parser
+} // namespace nonterminals
+
+} // namespace symbol
 
 #endif

@@ -6,7 +6,9 @@
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
-namespace lexer {
+namespace symbol {
+
+inline namespace terminals {
 
 class Type : public Terminal {
 
@@ -21,6 +23,8 @@ private:
 
 }; // class Type
 
-} // namespace lexer
+} // namespace terminals
+
+} // namespace symbol
 
 #endif

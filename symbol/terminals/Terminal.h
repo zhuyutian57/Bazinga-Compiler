@@ -1,14 +1,15 @@
 
 #include <string>
 
-#include "../symbol/Tag.h"
-#include "../symbol/Unit.h"
-using namespace symbol;
+#include "../Tag.h"
+#include "../Unit.h"
 
 #ifndef _TERMINAL_H_
 #define _TERMINAL_H_
 
-namespace lexer {
+namespace symbol {
+
+inline namespace terminals {
 
 class Terminal : public Unit {
 
@@ -25,6 +26,8 @@ private:
 
 }; // class Terminal
 
-} // namespace lexer
+} // namespace terminals
+
+} // namespace symbol
 
 #endif

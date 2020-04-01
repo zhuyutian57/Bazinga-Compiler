@@ -1,16 +1,17 @@
 
 #include "Expr.h"
-#include "Factor.h"
 
 #ifndef _UNARY_H_
 #define _UNARY_H_
 
-namespace parser {
+namespace symbol {
+
+inline namespace nonterminals {
 
 class Unary : public Expr {
 
 public:
-  Unary(const ENTRY& entry, lexer::Type *type)
+  Unary(const ENTRY& entry, terminals::Type *type)
     : Expr(entry, type, Tag::UNARY) {}
   ~Unary() {}
 
@@ -18,6 +19,8 @@ private:
 
 }; // class Unary
 
-} // namespace Parser
+} // namespace nonterminals
+
+} // namespace symbol
 
 #endif

@@ -6,14 +6,15 @@
 #ifndef _INTEGER_H_
 #define _INTEGER_H_
 
-namespace lexer {
+namespace symbol {
+
+inline namespace terminals {
 
 class Integer : public Terminal {
 
 public:
   Integer(const std::string& s)
-    : Terminal(s, symbol::Tag::INTEGER),
-      val(std::stoi(s)) {} 
+    : Terminal(s, Tag::INTEGER), val(std::stoi(s)) {} 
 
   const int& Val() { return val; }
 
@@ -22,6 +23,8 @@ private:
 
 }; // class Integer
 
-} // namespace lexer
+} // namespace terminals
+
+} // namespace symbol
 
 #endif

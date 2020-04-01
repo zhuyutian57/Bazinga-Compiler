@@ -1,16 +1,15 @@
 
 #include <string>
 
-#include "../symbol/Tag.h"
-#include "../symbol/Unit.h"
-using namespace symbol;
+#include "../Tag.h"
+#include "../Unit.h"
 
 #ifndef _NONTERMINAL_H_
 #define _NONTERMINAL_H_
 
-namespace parser {
+namespace symbol {
 
-#define ADDR std::string
+inline namespace nonterminals {
 
 class Nonterminal : public Unit {
 
@@ -23,6 +22,8 @@ private:
 
 }; // class Nonterminal
 
-} // namespace parser
+} // namespace nonterminals
+
+} // namespace symbol
 
 #endif
