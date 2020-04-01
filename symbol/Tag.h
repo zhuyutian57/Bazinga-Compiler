@@ -14,7 +14,7 @@ namespace Tag {
   const static int ID = 301;
 
   // Data types
-  const static int INTEGER = 302, FLOAT = 303;
+  const static int INTEGER = 302, REAL = 303;
 
   // End flog
   const static int END = '$';
