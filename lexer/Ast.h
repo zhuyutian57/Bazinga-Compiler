@@ -65,7 +65,7 @@ private:
     }
   }; // struct Info
 
-  //TODO So ugly, make it beautiful
+private:
   Node* CreateNode(const std::string& s) {/*{{{*/
     if(s == "(") return new Node(LBR);
     if(s == ")") return new Node(RBR);
