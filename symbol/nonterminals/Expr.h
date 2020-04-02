@@ -16,9 +16,9 @@ inline namespace nonterminals {
 class Expr : public Nonterminal {
 
 public:
-  Expr(const ENTRY& e, Type *tp)
+  Expr(const ENTRY& e, terminals::Type *tp)
     : Nonterminal(Tag::EXPR), type(tp), entry(e) {}
-  Expr(const ENTRY& e, Type *tp, const TAG& tag)
+  Expr(const ENTRY& e, terminals::Type *tp, const TAG& tag)
     : Nonterminal(tag), type(tp), entry(e) {}
   ~Expr() {}
 
