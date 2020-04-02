@@ -19,9 +19,7 @@ public:
       return -1;
     return bodies[i];
   }
-  const int BodySize() {
-    return bodies.size();
-  }
+  const int BodySize() { return bodies.size(); }
 
   void SetNumber(const int num) { number = num; }
   void SetHead(const int h) { head = h; }

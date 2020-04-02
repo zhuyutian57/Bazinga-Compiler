@@ -42,6 +42,6 @@ int main() {
   lrp->Build(rdp, gp);
   if(!lrp->Analyze(scp)) {
     cout << "fuckfuckfuck" << endl;
-  } 
+  }
 	return 0;
 }

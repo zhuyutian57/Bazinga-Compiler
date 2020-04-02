@@ -27,16 +27,16 @@ public:
     Informations();
   }/*}}}*/
 
-  void Reset() { cur = start; }
+  void Reset() { current_state = start; }
   DNF_STATE Goto(char ch) {
-    DFA_EDGE u = std::make_pair(cur, ch);
+    DFA_EDGE u = std::make_pair(current_state, ch);
     if(edges.find(u) == edges.end())
       return -1;
-    cur = edges[u];
-    return cur;
+    current_state = edges[u];
+    return current_state;
   }
   bool Accepted() {
-    return accepted_states.find(cur)
+    return accepted_states.find(current_state)
       != accepted_states.end();
   }
 
@@ -44,7 +44,7 @@ private:
   Ast *ast;
   
   int state_size;
-  DNF_STATE start, cur;
+  DNF_STATE start, current_state;
   std::vector<AST_LEAVES_SET*> ast_leaf_sets;
   std::set<char> alphabet;
   std::map<DFA_EDGE, DNF_STATE> edges;
@@ -64,6 +64,7 @@ private:
     }
   }; //struct Hash}}}
 
+private:
   void BuildDFA(const std::vector<std::set<int>*>& followpos) {/*{{{*/
     const int END_POS = ast->LeafSize();
     std::unordered_map<AST_LEAVES_SET, DNF_STATE, Hash> mps;

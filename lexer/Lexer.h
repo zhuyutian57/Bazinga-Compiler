@@ -13,7 +13,7 @@ namespace lexer {
 class Lexer {
 
 public:
-  Lexer() : cur(0) {/*{{{*/
+  Lexer() : current_state(0) {/*{{{*/
     dfa = new Automata();
     
     Reserve(new Terminal(';')); Reserve(new Terminal('+'));
@@ -49,16 +49,15 @@ public:
   }/*}}}*/
 
   // Return a terminal everytime
-  Terminal* Next_terminal() {/*{{{*/
-    return (Terminal*)tokens[cur++];
+  Terminal* NextTerminal() {/*{{{*/
+    return (Terminal*)tokens[current_state++];
   }/*}}}*/
 
 private:
+  int current_state;
   Automata *dfa;
   std::vector<void*> tokens;
   std::unordered_map<std::string, void*> words; 
-
-  int cur;
 
   struct Buf {/*{{{*/
     int cur;
@@ -69,7 +68,7 @@ private:
     }
     bool eof() { return cur >= chv.size(); }
     char peek() { return chv[cur]; }
-    char get() { cur++; return chv[cur - 1]; }
+    char get() { return chv[cur++]; }
     void ignore(int i) { while(i--) cur++; } 
     int tellg() { return cur; }
     void seekg(int i) { cur = i; }
