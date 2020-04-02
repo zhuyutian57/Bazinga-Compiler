@@ -29,6 +29,10 @@ public:
     return action_table[s][unitset.Index(lok)];
   }/*}}}*/
 
+  Product* GetProduct(const int& index) {
+    return products[index];
+  }
+
   UnitSet& Units() { return unitset; }
 
 private:
@@ -39,7 +43,6 @@ private:
   std::vector<ACTION_SET> action_table;
 
 private:
-
   bool GenerateActionTable(const char* grammars) {/*{{{*/
     if(!RecognizeCFL(grammars)) return false;
     CalculateFirstTerminalOfUnit();
