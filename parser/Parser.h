@@ -1,6 +1,6 @@
 
 #include "Action.h"
-#include "Element.h"
+#include "State.h"
 
 #include "../bin/Bin.h"
 #include "../lexer/Lexer.h"
@@ -21,8 +21,7 @@ public:
   Parser() : lok(NULL), entry_Size(0) {/*{{{*/
     env = new Env();
     lex = new Lexer();
-    action = new Action();
-    e_stack = new Stack<Element>;
+    action_table = new Action();
     reduce_funcs.push_back(NULL); // Accepted
     reduce_funcs.push_back(std::bind(&Reduce_01, this));
     reduce_funcs.push_back(std::bind(&Reduce_02, this));
@@ -45,41 +44,42 @@ public:
   ~Parser() {
     delete env;
     delete lex;
-    delete action;
-    delete e_stack;
+    delete action_table;
   }/*}}}*/
 
   bool Build(const char* regular_definations, /*{{{*/
       const char* grammars) {
     if(!lex->Build(regular_definations)) return false;
-    if(!action->Build(grammars)) return false;
+    if(!action_table->Build(grammars)) return false;
     return true;
   }/*}}}*/
 
   bool Analyze(const char* source_code) {/*{{{*/
     if(!lex->Analyze(source_code)) return false; 
-    e_stack->Push(Element(0, KeyWords::End));
-    lok = lex->Next_terminal();
+    e_stack.Push(new State(0, KeyWords::End));
+    lok = lex->NextTerminal();
     while(true) {
-      const ACTION_STATE& s = e_stack->Top().State();
+      const ACTION_STATE& s = e_stack.Top()->StateNumber();
       const int& t = lok->Tag();
-      const std::string& ac = action->ACTION(s, t);
-      CurrentState(ac);
-      if(ac == ACCEPTED) {
-        Print("ACCEPTED! NO ERROE! CONGRATULATIONS!"); 
-        break; 
-      } else if(ac[0] == 'S') {
-        const int && n_state = std::stoi(ac.substr(1, ac.size()));
-        e_stack->Push(Element(n_state, lok));
-        lok = lex->Next_terminal();
-      } else if(ac[0] == 'R') {
-        const int && p_id = std::stoi(ac.substr(1, ac.size())); 
-        if(!Reduce(p_id)) {
+      const std::string& action = action_table->ACTION(s, t);
+      CurrentState(action);
+      if(action[0] == 'S') {
+        const int n_state =
+          std::stoi(action.substr(1, action.size()));
+        e_stack.Push(new State(n_state, lok));
+        lok = lex->NextTerminal();
+      } else if(action[0] == 'R') {
+        const int product_index =
+          std::stoi(action.substr(1, action.size())); 
+        if(!Reduce(product_index)) {
           bin::Error("fuck");
           return false;
         }
+      } else if(action == ACCEPTED) {
+        Print("ACCEPTED! NO ERROE! CONGRATULATIONS!"); 
+        break;
       } else {
-        bin::Error("what's this?");
+        Error("what's this?");
         return false;
       }
     }
@@ -93,8 +93,8 @@ private:
   Terminal *lok;
   lexer::Lexer *lex;
   // parser
-  Action *action;
-  Stack<Element>* e_stack;
+  Action *action_table;
+  Stack<State*> e_stack;
   std::vector<std::function<void*()> > reduce_funcs;
   // inter
   int entry_Size;
@@ -102,19 +102,19 @@ private:
 private:
   void CurrentState(const std::string& ac) {/*{{{*/
     int left = 48;
-    for(int i = e_stack->Size(); i; i--) {
-      int s = (*e_stack)[-i].State();
+    for(int i = e_stack.Size(); i; i--) {
+      int s = e_stack[-i]->StateNumber();
       std::cout << s << ' ';
       left -= 1 + std::to_string(s).size();
     }
     for(int i = 0; i < left; i++) std::cout << ' ';
     left = 72;
-    std::cout << action->Units()[((Unit*)lok)->Tag()] << '\t';
-    left -= 1 + action->Units()[((Unit*)lok)->Tag()].size();
-    for(int i = 1; i <= e_stack->Size(); i++) {
-      Unit *uptr = (Unit*)GetElement(-i);
-      left -= action->Units()[uptr->Tag()].size() + 1;
-      std::cout << action->Units()[uptr->Tag()] << ' ';
+    std::cout << action_table->Units()[((Unit*)lok)->Tag()] << '\t';
+    left -= 1 + action_table->Units()[((Unit*)lok)->Tag()].size();
+    for(int i = 1; i <= e_stack.Size(); i++) {
+      Unit *uptr = (Unit*)GetGrammarSymbol(-i);
+      left -= action_table->Units()[uptr->Tag()].size() + 1;
+      std::cout << action_table->Units()[uptr->Tag()] << ' ';
     }
     for(int i = 0; i < left; i++) std::cout << ' ';
     std::cout << ac << '\n';
@@ -122,17 +122,17 @@ private:
 
   inline void Shift(/*{{{*/
       const ACTION_STATE& state, void* input_ptr) {
-    e_stack->Push(Element(state, input_ptr));
+    e_stack.Push(new State(state, input_ptr));
   }/*}}}*/
 
   inline int Goto(const ACTION_STATE& s, Unit* unit) {/*{{{*/
-    const std::string& ac = action->ACTION(s, unit->Tag());
+    const std::string& ac = action_table->ACTION(s, unit->Tag());
     if(ac == ACTION_ERROR) return -1;
     return std::stoi(ac);
   }/*}}}*/
 
-  inline void* GetElement(const int index) {/*{{{*/
-    return (*e_stack)[index].Ele();
+  inline void* GetGrammarSymbol(const int index) {/*{{{*/
+    return e_stack[index]->GrammarSymbol();
   }/*}}}*/
 
   inline ENTRY new_entry() {/*{{{*/
@@ -165,15 +165,27 @@ private:
     return type_2;
   }/*}}}*/
 
-  inline bool Reduce(const int& prod_id) {/*{{{*/
-    void* n_unit = reduce_funcs[prod_id]();
+  bool CheckProduct(const int& product_index) {/*{{{*/
+    Product* const product = action_table->GetProduct(product_index);
+    if(product->Body(0) == Tag::EPSILON) return true;
+    const int n = product->BodySize();
+    for(int i = 0; i < n; i++) {
+      const TAG b = product->Body(i);
+      const TAG t = ((Unit*)GetGrammarSymbol(i - n))->Tag();
+      if(b != t) return false;
+    }
+    return true;
+  }/*}}}*/
+
+  bool Reduce(const int& product_index) {/*{{{*/
+    if(!CheckProduct(product_index)) return false;
+    void* n_unit = reduce_funcs[product_index]();
     if(n_unit == NULL) return false;
-    int n_state = Goto(e_stack->Top().State(), (Unit*)n_unit);
+    int n_state = Goto(e_stack.Top()->StateNumber(), (Unit*)n_unit);
     STACK_PUSH(n_state, n_unit);
     return true;
   }/*}}}*/
 
-  //TODO BUG
   // Stmts -> Stmt Stmts
   void* Reduce_01() {/*{{{*/
     Stmts *n_stmts = new Stmts();
@@ -193,8 +205,8 @@ private:
 
   // Stmt -> TYPE ID ;
   void* Reduce_03() {/*{{{*/
-    Type *type = (Type*)GetElement(-3);
-    Terminal *word = (Terminal*)GetElement(-2);
+    Type *type = (Type*)GetGrammarSymbol(-3);
+    Terminal *word = (Terminal*)GetGrammarSymbol(-2);
     /*------------Semantic Action------------*/
     if(env->InScope(word)) {
       bin::Error(word->Lexeme() + " is defined!\n");
@@ -209,9 +221,9 @@ private:
 
   // Stmt -> TYPE ID = Expr ;
   void* Reduce_04() {/*{{{*/
-    Type *type = (Type*)GetElement(-5);
-    Terminal *word = (Terminal*)GetElement(-4);
-    Expr *expr = (Expr*)GetElement(-2);
+    Type *type = (Type*)GetGrammarSymbol(-5);
+    Terminal *word = (Terminal*)GetGrammarSymbol(-4);
+    Expr *expr = (Expr*)GetGrammarSymbol(-2);
     /*------------Semantic Action------------*/
     if(env->InScope(word)) {
       bin::Error(word->Lexeme() + " has been defined!\n");
@@ -233,8 +245,8 @@ private:
 
   // Stmt -> ID = Expr ;
   void* Reduce_05() {/*{{{*/
-    Terminal *word = (Terminal*)GetElement(-4);
-    Expr *expr = (Expr*)GetElement(-2);
+    Terminal *word = (Terminal*)GetGrammarSymbol(-4);
+    Expr *expr = (Expr*)GetGrammarSymbol(-2);
     /*------------Semantic Action------------*/
     Id *id = env->GetId(word->Lexeme());
     if(id == NULL) {
@@ -260,27 +272,22 @@ private:
       const std::string op) {
     /*------------Semantic Action------------*/
     ENTRY n_entry;
-    Type *mx_type = MaxType(
-        expr_1->Type(), expr_2->Type());  
+    Type *mx_type = MaxType(expr_1->Type(), expr_2->Type());  
     if(expr_1->Type() != expr_2->Type()) {
       Expr *mi_expr;
       ENTRY tmp;
       if(expr_1->Type() != mx_type) {
-        tmp = TypeTransfrom(
-            expr_1->Entry(), expr_1->Type(), mx_type);
+        tmp = TypeTransfrom(expr_1->Entry(), expr_1->Type(), mx_type);
         mi_expr = expr_1;
       } else {
-        tmp = TypeTransfrom(
-            expr_2->Entry(), expr_2->Type(), mx_type);
+        tmp = TypeTransfrom(expr_2->Entry(), expr_2->Type(), mx_type);
         mi_expr = expr_2;
       }
       n_entry = new_entry();
-      gen_inter(n_entry + " = " + mi_expr->Entry()
-          + op + tmp);
+      gen_inter(n_entry + " = " + mi_expr->Entry() + op + tmp);
     } else {
       n_entry = new_entry();
-      gen_inter(n_entry + " = " + expr_1->Entry()
-          + op + expr_2->Entry());
+      gen_inter(n_entry + " = " + expr_1->Entry() + op + expr_2->Entry());
     }
     /*---------------------------------------*/
     return std::make_pair(n_entry, mx_type);
@@ -288,8 +295,8 @@ private:
   
   // Expr -> Expr + Term
   void* Reduce_06() {/*{{{*/
-    Expr *expr = (Expr*)GetElement(-3);
-    Term *term = (Term*)GetElement(-1);
+    Expr *expr = (Expr*)GetGrammarSymbol(-3);
+    Term *term = (Term*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     ENTRY_TYPE et = ReduceExpression(expr, term, " + ");
     /*---------------------------------------*/
@@ -300,8 +307,8 @@ private:
 
   // Expr -> Expr - Term
   void* Reduce_07() {/*{{{*/
-    Expr *expr = (Expr*)GetElement(-3);
-    Term *term = (Term*)GetElement(-1);
+    Expr *expr = (Expr*)GetGrammarSymbol(-3);
+    Term *term = (Term*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     ENTRY_TYPE et = ReduceExpression(expr, term, " - ");
     /*---------------------------------------*/
@@ -312,7 +319,7 @@ private:
 
   // Expr -> Term
   void* Reduce_08() {/*{{{*/
-    Term *term = (Term*)GetElement(-1);
+    Term *term = (Term*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Expr *n_expr = new Expr(term->Entry(), term->Type());
@@ -322,8 +329,8 @@ private:
 
   // Term -> Term * Unary
   void* Reduce_09() {/*{{{*/
-    Term *term = (Term*)GetElement(-3);
-    Unary *unary = (Unary*)GetElement(-1);
+    Term *term = (Term*)GetGrammarSymbol(-3);
+    Unary *unary = (Unary*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     ENTRY_TYPE et = ReduceExpression(term, unary, " * ");
     /*---------------------------------------*/
@@ -334,8 +341,8 @@ private:
 
   // Term -> Term / Unary
   void* Reduce_10() {/*{{{*/
-    Term *term = (Term*)GetElement(-3);
-    Unary *unary = (Unary*)GetElement(-1);
+    Term *term = (Term*)GetGrammarSymbol(-3);
+    Unary *unary = (Unary*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     ENTRY_TYPE et = ReduceExpression(term, unary, " / ");
     /*---------------------------------------*/
@@ -346,7 +353,7 @@ private:
 
   // Term -> Unary
   void* Reduce_11() {/*{{{*/
-    Unary *unary = (Unary*)GetElement(-1);
+    Unary *unary = (Unary*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Term *n_term = new Term(unary->Entry(), unary->Type());
@@ -356,7 +363,7 @@ private:
 
   // Unary -> - Unary
   void* Reduce_12() {/*{{{*/
-    Unary *unary = (Unary*)GetElement(-1);
+    Unary *unary = (Unary*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     ENTRY n_entry = new_entry();
     gen_inter(n_entry + " = "
@@ -369,7 +376,7 @@ private:
 
   // Unary -> Factor
   void* Reduce_13() {/*{{{*/
-    Factor *factor = (Factor*)GetElement(-1);
+    Factor *factor = (Factor*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Unary *n_unary =
@@ -380,7 +387,7 @@ private:
 
   // Factor -> ( Expr )
   void* Reduce_14() {/*{{{*/
-    Expr *expr = (Expr*)GetElement(-2);
+    Expr *expr = (Expr*)GetGrammarSymbol(-2);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Factor *n_factor =
@@ -391,7 +398,7 @@ private:
 
   // Factor -> ID
   void* Reduce_15() {/*{{{*/
-    Terminal *word = (Terminal*)GetElement(-1);
+    Terminal *word = (Terminal*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     Id *id = env->GetId(word->Lexeme());
     if(id == NULL) {
@@ -407,7 +414,7 @@ private:
 
   // Factor -> INTEGER
   void* Reduce_16() {/*{{{*/
-    Integer *_int = (Integer*)GetElement(-1);
+    Integer *_int = (Integer*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Factor *n_factor =
@@ -418,7 +425,7 @@ private:
 
   // Factor -> FLOAT
   void* Reduce_17() {/*{{{*/
-    Real *_float = (Real*)GetElement(-1);
+    Real *_float = (Real*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
     /*---------------------------------------*/
     Factor *n_factor =

@@ -56,10 +56,10 @@
 // Reduce
 #define ENTRY_TYPE std::pair<ENTRY, Type*>
 #define STACK_PUSH(state, nonterminal) \
-  e_stack->Push(Element(state, nonterminal))
+  e_stack.Push(new State(state, nonterminal))
 #define STACK_POP(states_size) \
   for(int i = 0; i < states_size; i++) { \
-    e_stack->Pop(); \
+    delete e_stack.Top(); e_stack.Pop(); \
   }
 
 #endif
