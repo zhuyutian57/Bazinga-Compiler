@@ -2,7 +2,7 @@
 
 ​	This is a slow-to-die, single-function and fake-cpp compiler. Don't expect too much. Just for fun.
 
-​	Congratulations! The first version is published. Here are details.
+​	Congratulations! The first version is published. Here are the details.
 
 ## 1. Structure of Project 
 
