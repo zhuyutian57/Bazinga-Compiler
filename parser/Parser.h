@@ -135,21 +135,19 @@ private:
     return e_stack[index]->GrammarSymbol();
   }/*}}}*/
 
-  inline ENTRY new_entry() {/*{{{*/
+  inline ENTRY NewEntry() {/*{{{*/
     return std::string("t")
       + std::to_string(++entry_Size);
   }/*}}}*/
 
-  inline void gen_inter(const std::string& inter_code) {/*{{{*/
+  inline void GenerateIntermediateCode(const std::string& inter_code) {/*{{{*/
     Print(inter_code);
   }/*}}}*/
 
-  inline ENTRY TypeTransfrom(/*{{{*/
-      const ENTRY& entry,
-      const Type *type_1,
-      const Type *type_2) {
-    ENTRY n_entry = new_entry();
-    gen_inter(n_entry + " = " + type_1->Lexeme()
+  inline ENTRY TypeTransform(/*{{{*/
+      const ENTRY& entry, const Type *type_1, const Type *type_2) {
+    ENTRY n_entry = NewEntry();
+    GenerateIntermediateCode(n_entry + " = " + type_1->Lexeme()
         + "to" + type_2->Lexeme() + " " + entry);
     return entry;
   }/*}}}*/
@@ -232,11 +230,11 @@ private:
     env->Put(word, type);
     ENTRY n_entry;
     if(expr->Type() != type) {
-      n_entry = TypeTransfrom(expr->Entry(), expr->Type(), type);
+      n_entry = TypeTransform(expr->Entry(), expr->Type(), type);
     } else {
       n_entry = expr->Entry();
     }
-    gen_inter(word->Lexeme() + " = " + n_entry);
+    GenerateIntermediateCode(word->Lexeme() + " = " + n_entry);
     /*---------------------------------------*/
     Stmt *n_stmt = new Stmt();
     STACK_POP(5);
@@ -255,12 +253,12 @@ private:
     }
     ENTRY n_entry;
     if(expr->Type() != id->Type()) {
-      n_entry = TypeTransfrom(expr->Entry(),
+      n_entry = TypeTransform(expr->Entry(),
           expr->Type(), id->Type());
     } else {
       n_entry = expr->Entry();
     }
-    gen_inter(id->Name() + " = " + n_entry);
+    GenerateIntermediateCode(id->Name() + " = " + n_entry);
     /*---------------------------------------*/
     Stmt *n_stmt = new Stmt();
     STACK_POP(4);
@@ -268,29 +266,24 @@ private:
   }/*}}}*/
 
   ENTRY_TYPE ReduceExpression(/*{{{*/
-      auto *expr_1, auto *expr_2,
-      const std::string op) {
+      auto *expr_1, auto *expr_2, const std::string op) {
     /*------------Semantic Action------------*/
-    ENTRY n_entry;
-    Type *mx_type = MaxType(expr_1->Type(), expr_2->Type());  
-    if(expr_1->Type() != expr_2->Type()) {
-      Expr *mi_expr;
-      ENTRY tmp;
-      if(expr_1->Type() != mx_type) {
-        tmp = TypeTransfrom(expr_1->Entry(), expr_1->Type(), mx_type);
-        mi_expr = expr_1;
-      } else {
-        tmp = TypeTransfrom(expr_2->Entry(), expr_2->Type(), mx_type);
-        mi_expr = expr_2;
-      }
-      n_entry = new_entry();
-      gen_inter(n_entry + " = " + mi_expr->Entry() + op + tmp);
+    ENTRY n_entry, max_entry, min_entry;
+    Type *max_type = MaxType(expr_1->Type(), expr_2->Type());  
+    if(expr_1->Type() != max_type) {
+      min_entry = TypeTransform(expr_1->Entry(), expr_1->Type(), max_type);
+      max_entry = expr_2->Entry();
+    } else if(expr_2->Type() != max_type) {
+      min_entry = TypeTransform(expr_2->Entry(), expr_2->Type(), max_type);
+      max_entry = expr_1->Entry();
     } else {
-      n_entry = new_entry();
-      gen_inter(n_entry + " = " + expr_1->Entry() + op + expr_2->Entry());
+      min_entry = expr_2->Entry();
+      max_entry = expr_1->Entry();
     }
+    n_entry = NewEntry();
+    GenerateIntermediateCode(n_entry + " = " + max_entry + " + "+ min_entry);
     /*---------------------------------------*/
-    return std::make_pair(n_entry, mx_type);
+    return std::make_pair(n_entry, max_type);
   }/*}}}*/
   
   // Expr -> Expr + Term
@@ -365,9 +358,8 @@ private:
   void* Reduce_12() {/*{{{*/
     Unary *unary = (Unary*)GetGrammarSymbol(-1);
     /*------------Semantic Action------------*/
-    ENTRY n_entry = new_entry();
-    gen_inter(n_entry + " = "
-        + " minus " + unary->Entry());
+    ENTRY n_entry = NewEntry();
+    GenerateIntermediateCode(n_entry + " = " + " minus " + unary->Entry());
     /*---------------------------------------*/
     Unary *n_unary = new Unary(n_entry, unary->Type());
     STACK_POP(2);

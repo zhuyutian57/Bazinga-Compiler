@@ -8,4 +8,4 @@
   float d = 1.;
   float e = 2.1;
   e = d + e;
-
+  int f = c + e;
