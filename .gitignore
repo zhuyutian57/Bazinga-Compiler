@@ -1,10 +1,13 @@
+# CMake
+build
+libs
+
 *.swp
 *.swo
 *.py[cod]
 *.in
 *.out
 *.jnlp
-*.txt
 *.zip
 *.rar
 *.7z
