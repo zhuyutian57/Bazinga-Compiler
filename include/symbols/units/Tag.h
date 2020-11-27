@@ -6,36 +6,38 @@ namespace symbols {
 
 namespace Tag {
 
-  /* ================= Lexer ================= */
+  /* ================= Terminals ================= */
   // Types - int, float
-  const static int TYPE = 300;
+  const int TYPE = 300;
 
   // Variables
-  const static int ID = 301;
+  const int ID = 301;
 
   // Data types
-  const static int INTEGER = 302, REAL = 303;
+  const int INTEGER = 302, REAL = 303;
 
-  // End flog
-  const static int END = '$';
-  /* ================= Lexer ================= */
+  // Keyword
+  const int IF = 304, ELSE = 305, WHILE = 306, DO = 307;
+
+  // Logic Operators
+  const int OR = 308, AND = 309, EQ = 310, NE = 311;
+  const int LE = 312, GE = 313;
+
+  // Bool Constants
+  const int TRUE = 314, FALSE = 315;
+
+  // Epsilon
+  const int EPSILON = 399;
+  /* ================= Terminals ================= */
   
-  /* ================= Parser ================= */
-  // Terminal
-  const static int EPSILON = 400;
-  // Nonterminals
-  const static int PROGRAM = 401;
-  const static int STMTS = 402, STMT = 403;
-  const static int EXPR = 404, TERM = 405;
-  const static int UNARY = 406, FACTOR = 407;
-  /* ================= Parser ================= */
+  /* ================= Nonterminals ================= */
+  const int STMTS = 400, STMT = 401;
+  const int BOOL = 402, JOIN = 403, EQUAL = 404, INEQ = 405;
+  const int ARITH = 406, TERM = 407, UNARY = 408, FACTOR = 409;
+  const int INSTR = 410, JUMP = 411;
 
-  /* ================= Test ================= */
-  // Nonterminals
-  const static int
-    P = 501, S = 502, L = 503, R = 504;
-
-  /* ================= Test ================= */
+  const int PROGRAM = 499;
+  /* ================= Nonterminals ================= */
 
 } // namespace Tag
 

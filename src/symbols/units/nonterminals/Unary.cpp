@@ -3,5 +3,5 @@
 
 using namespace symbols;
 
-Unary::Unary(const ENTRY& entry, terminals::Type *type)
+Unary::Unary(const ENTRY& entry, Type *type)
   : Expr(entry, type, Tag::UNARY) {}

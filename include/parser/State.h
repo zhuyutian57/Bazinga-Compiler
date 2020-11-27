@@ -11,16 +11,16 @@ namespace parser {
 class State {
 
 public:
-  State(void*);
-  State(const int&, void*);
+  State(Unit*);
+  State(const int&, Unit*);
   ~State();
 
   const int& StateNumber();
-  void* GrammarSymbol();
+  Unit* GrammarSymbol();
 
 private:
   int state_number;
-  void *grammar_symbol;
+  Unit* grammar_symbol;
 
 private:
   void DeleteGrammarSymbol();

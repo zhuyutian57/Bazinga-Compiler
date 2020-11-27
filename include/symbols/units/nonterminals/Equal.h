@@ -1,20 +1,20 @@
 
 #include "Expr.h"
 
-#ifndef _FACTOR_H_
-#define _FACTOR_H_
+#ifndef _EQUAL_H_
+#define _EQUAL_H_
 
 namespace symbols {
 
 inline namespace nonterminals {
 
-class Factor : public Expr {
+class Equal : public Expr {
 
 public:
-  Factor(const ENTRY&, Type*);
-  ~Factor() {}
+  Equal(const ENTRY&, Type*);
+  ~Equal() {}
 
-}; // class Factor
+}; // class Equal
 
 } // namespace nonterminals
 

@@ -1,20 +1,20 @@
 
 #include "Expr.h"
 
-#ifndef _FACTOR_H_
-#define _FACTOR_H_
+#ifndef _JOIN_H_
+#define _JOIN_H_
 
 namespace symbols {
 
 inline namespace nonterminals {
 
-class Factor : public Expr {
+class Join : public Expr {
 
 public:
-  Factor(const ENTRY&, Type*);
-  ~Factor() {}
+  Join(const ENTRY&, Type*);
+  ~Join() {}
 
-}; // class Factor
+}; // class Join
 
 } // namespace nonterminals
 

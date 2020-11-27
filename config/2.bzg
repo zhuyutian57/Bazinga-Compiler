@@ -1,0 +1,16 @@
+
+  int a; int b; int c;
+  float d; float f; float e;
+  a = a + (b * (c == 0));
+  b = a && c;
+  c = b || a;
+  if(a == 5 && b == 6 || c == 7)
+    d = f * e + f * a;
+  do a = b + c while((e - f) < 0.01);
+
+
+
+
+
+
+  while ( a*b == 0) if(a > 5) a = a / 2; 

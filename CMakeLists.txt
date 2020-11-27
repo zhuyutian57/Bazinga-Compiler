@@ -42,10 +42,12 @@ TARGET_INCLUDE_DIRECTORIES(Parser_lib  PUBLIC  ${PROJECT_SOURCE_DIR}/include/par
 
 # execute
 ADD_EXECUTABLE(Bazinga ${PROJECT_SOURCE_DIR}/src/Run.cpp)
+ADD_EXECUTABLE(Check ${PROJECT_SOURCE_DIR}/src/Check.cpp)
 
 # link all namespaces to Bazinga
-TARGET_LINK_LIBRARIES(Units_lib     PUBLIC  Bin_lib)
-TARGET_LINK_LIBRARIES(Symbols_lib   PUBLIC  Units_lib)
-TARGET_LINK_LIBRARIES(Lexer_lib     PUBLIC  Symbols_lib)
-TARGET_LINK_LIBRARIES(Parser_lib    PUBLIC  Lexer_lib)
-TARGET_LINK_LIBRARIES(Bazinga       PUBLIC  Parser_lib)
+TARGET_LINK_LIBRARIES(Units_lib   PUBLIC  Bin_lib)
+TARGET_LINK_LIBRARIES(Symbols_lib PUBLIC  Units_lib)
+TARGET_LINK_LIBRARIES(Lexer_lib   PUBLIC  Symbols_lib)
+TARGET_LINK_LIBRARIES(Parser_lib  PUBLIC  Lexer_lib)
+TARGET_LINK_LIBRARIES(Bazinga     PUBLIC  Parser_lib)
+TARGET_LINK_LIBRARIES(Check       PUBLIC  Parser_lib)

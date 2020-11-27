@@ -317,14 +317,16 @@ bool Action::GenerateReduce() {
       if(!GetAllBodies(item)) continue;
       for(auto lok : (*itemset->LokSet(item))) {
         const int& j = unitset.Index(lok);
-        if(action_table[i][j] != ACTION_ERROR) {
+        bool ie = (i == STATE_IF_AND_IE && lok == Tag::ELSE);
+        if(!ie && action_table[i][j] != ACTION_ERROR) {
           Error(std::string("Conflict : ") + '['
               + std::to_string(i) + ',' + unitset[lok]
               + "] already has " + action_table[i][j]);
           return false;
         }
         std::string action = "R";
-        if(item.PRODUCT_INDEX == 0) action = "ACC";
+        if(ie) action += std::to_string(PRODUCT_JUMP);
+        else if(item.PRODUCT_INDEX == 0) action = "ACC";
         else action += std::to_string(item.PRODUCT_INDEX);
         action_table[i][j] = action;
       }
@@ -423,5 +425,7 @@ void Action::Informations() {
   InformationOfProducts();
   InformationOfFirstSets();
   InformationOfItemSets();
+  std::cout.clear();
+  freopen("./config/action_table.txt", "w", stdout);
   InformationOfActionTable();
 }

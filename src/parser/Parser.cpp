@@ -41,7 +41,7 @@ bool Parser::Build(const char* regular_definations,
 
 bool Parser::Analyze(const char* source_code) {
   if(!lex->Analyze(source_code)) return false; 
-  e_stack.Push(new State(0, KeyWords::End));
+  e_stack.Push(new State(0, NULL));
   lok = lex->NextTerminal();
   while(true) {
     const ACTION_STATE& s = e_stack.Top()->StateNumber();
@@ -91,7 +91,7 @@ void Parser::CurrentState(const std::string& ac) {
 }
 
 void Parser::Shift(
-    const ACTION_STATE& state, void* input_ptr) {
+    const ACTION_STATE& state, Unit* input_ptr) {
   e_stack.Push(new State(state, input_ptr));
 }
 
@@ -127,7 +127,7 @@ Type* Parser::MaxType(Type* type_1,Type* type_2) {
     return type_1;
   return type_2;
 }
-Type* Parser::min_type(Type* type_1,Type* type_2) {
+Type* Parser::MinType(Type* type_1,Type* type_2) {
   if(type_1->Tag() < type_2->Tag())
     return type_1;
   return type_2;

@@ -5,8 +5,8 @@ using namespace symbols;
 
 Env::Env() : pre(NULL) {
   types = new TYPE_MANAGER;
-  (*types)["int"] = KeyWords::Int;
-  (*types)["float"] = KeyWords::Float;
+  (*types)["int"] = Types::Int;
+  (*types)["float"] = Types::Float;
 }
 Env::Env(Env *e) : pre(e) { types = e->types; }
 Env::~Env() {
@@ -16,7 +16,7 @@ Env::~Env() {
   }
 }
 
-void Env::Put(const Terminal *word, Type *type) {
+void Env::Put(const Word *word, Type *type) {
   if(table.find(word->Lexeme()) != table.end()) return;
   table[word->Lexeme()] = new Id(word->Lexeme(), type);
 }
@@ -28,7 +28,7 @@ Id* Env::GetId(const std::string& name) {
   return NULL;
 }
 
-bool Env::InScope(const Terminal *word) {
+bool Env::InScope(const Word *word) {
   return table.find(word->Lexeme()) != table.end();
 }
 

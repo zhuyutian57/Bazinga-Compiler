@@ -89,7 +89,7 @@ Node* Ast::BuildSubtrees(std::istringstream& ss) {
         break;
       case LBR: break;
       case SUBT: break;
-      default: // FOr PLUS and STAR
+      default: // For PLUS and STAR
         t->SetLs(S->top()->Ls());
         delete S->top(); S->pop();
         t = new Node(SUBT, t, NULL);

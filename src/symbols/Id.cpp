@@ -9,4 +9,4 @@ Id::~Id() { delete type; }
 
 const std::string& Id::Name() { return name; }
 
-terminals::Type* Id::Type() { return type; }
+Type* Id::GetType() { return type; }

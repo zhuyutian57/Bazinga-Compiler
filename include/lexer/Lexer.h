@@ -1,7 +1,7 @@
 
 #include "Automata.h"
+#include "Types.h"
 #include "UnitSet.h"
-#include "KeyWords.h"
 
 using namespace symbols;
 
@@ -18,7 +18,7 @@ public:
 
   bool Build(const char*);
   bool Analyze(const char*);
-  Terminal* NextTerminal();
+  Word* NextTerminal();
 
 private:
   int current_state;
@@ -49,7 +49,7 @@ private:
 
 
 private:
-  void Reserve(const Terminal*);
+  void Reserve(const Word*);
   void AddNewWord(const std::string&);
   void Recognize(const std::string&);
   bool AnalyzeSourceCode(const char*);

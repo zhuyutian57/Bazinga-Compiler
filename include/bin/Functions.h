@@ -7,8 +7,8 @@
 namespace bin {
 
 template<typename T> 
-void MoveSetToSet(const std::set<T>* out, std::set<T>* in) {
-  for(auto e : (*out)) in->insert(e);
+void MoveSetToSet(const std::set<T>* from, std::set<T>* to) {
+  for(auto e : (*from)) to->insert(e);
 }
 
 template void MoveSetToSet(const std::set<int>*, std::set<int>*);

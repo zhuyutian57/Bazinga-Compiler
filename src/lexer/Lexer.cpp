@@ -7,13 +7,27 @@ using namespace lexer;
 Lexer::Lexer() : current_state(0) {
   dfa = new Automata();
   
-  Reserve(new Terminal(';')); Reserve(new Terminal('+'));
-  Reserve(new Terminal('-')); Reserve(new Terminal('*'));
-  Reserve(new Terminal('/')); Reserve(new Terminal('='));
-  Reserve(new Terminal('(')); Reserve(new Terminal(')'));
-  
-  Reserve(KeyWords::Int);
-  Reserve(KeyWords::Float);
+  Reserve(new Word('+')); Reserve(new Word('-'));
+  Reserve(new Word('*')); Reserve(new Word('/'));
+  Reserve(new Word('<')); Reserve(new Word('>'));
+  Reserve(new Word('!'));
+  Reserve(new Word('=')); Reserve(new Word(';'));
+  Reserve(new Word('(')); Reserve(new Word(')'));
+
+  Reserve(new Word("||", Tag::OR));
+  Reserve(new Word("&&", Tag::AND));
+  Reserve(new Word("==", Tag::EQ));
+  Reserve(new Word("!=", Tag::NE));
+  Reserve(new Word("<=", Tag::LE));
+  Reserve(new Word(">=", Tag::GE));
+
+  Reserve(new Word("if",    Tag::IF));
+  Reserve(new Word("else",  Tag::ELSE));
+  Reserve(new Word("while", Tag::WHILE));
+  Reserve(new Word("do",    Tag::DO));
+
+  Reserve(Types::Int);
+  Reserve(Types::Float);
 }
 Lexer::~Lexer() {
   for(auto p : words) {
@@ -36,34 +50,31 @@ bool Lexer::Analyze(const char* source_codes) {
     return false;
   }
   InformationsOfTokens();
-  tokens.push_back(KeyWords::End);
+  tokens.push_back(new Word('$'));
   return true;
 }
 
 // Return a terminal everytime
-Terminal* Lexer::NextTerminal() {
-  return (Terminal*)tokens[current_state++];
+Word* Lexer::NextTerminal() {
+  return (Word*)tokens[current_state++];
 }
 
-void Lexer::Reserve(const Terminal* w) {
+void Lexer::Reserve(const Word* w) {
   words[w->Lexeme()] = (void*)w;
 }
 
 void Lexer::AddNewWord(const std::string& word) {
   if(word[0] >= '0' && word[0] <= '9') {
-    if(word.find('.') != std::string::npos) {
+    if(word.find('.') != std::string::npos)
       Reserve(new Real(word));
-    } else {
-      Reserve(new Integer(word));
-    }
+    else Reserve(new Integer(word));
   } else {
-    Reserve(new Terminal(word, Tag::ID));
+    Reserve(new Word(word, Tag::ID));
   }
 }
 
 void Lexer::Recognize(const std::string& word) {
-  if(words.find(word) == words.end())
-    AddNewWord(word);
+  if(words.find(word) == words.end()) AddNewWord(word);
   tokens.push_back(words[word]);
 }
 
@@ -93,7 +104,7 @@ void Lexer::InformationsOfTokens() {
   std::string sym = ";+-*/=()";
   for(auto addr : tokens) {
     Unit *t = (Unit*)addr;
-    Terminal *p = (Terminal*)addr;
+    Word *p = (Word*)addr;
     std::cout << '<' << p->Tag() << ',';
     std::cout << '\t' << p->Lexeme() << ',';
     std::cout << '\t' << words[p->Lexeme()] << ">\n";

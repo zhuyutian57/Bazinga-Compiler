@@ -11,10 +11,8 @@ inline namespace nonterminals {
 class Term : public Expr {
 
 public:
-  Term(const ENTRY&, terminals::Type*);
+  Term(const ENTRY&, Type*);
   ~Term() {}
-
-private:
 
 }; // class Term
 

@@ -1,6 +1,6 @@
 
 #include "Id.h"
-#include "KeyWords.h"
+#include "Types.h"
 #include "UnitSet.h"
 
 #ifndef _ENV_H_
@@ -15,9 +15,9 @@ public:
   Env(Env*);
   ~Env();
 
-  void Put(const Terminal*, Type*);
+  void Put(const Word*, Type*);
   Id* GetId(const std::string&);
-  bool InScope(const Terminal*);
+  bool InScope(const Word*);
   Type* GetType(const std::string&);
 
 private:

@@ -41,13 +41,11 @@ void Automata::BuildDFA(const std::vector<std::set<int>*>& followpos) {
   std::queue<DNF_STATE> Q;
   Q.push(start);
   mps[(*ast_leaf_sets[0])] = start;
-  // u -> v
   for(DNF_STATE u; !Q.empty(); ) {
     u = Q.front(); Q.pop();
     if(vis.find(u) != vis.end()) continue;
     vis[u] = true;
-    if(ast_leaf_sets[u]->find(END_POS)
-        != ast_leaf_sets[u]->end())
+    if(ast_leaf_sets[u]->find(END_POS) != ast_leaf_sets[u]->end())
       accepted_states.insert(u);
     for(auto ch : alphabet) {
       AST_LEAVES_SET *v = new AST_LEAVES_SET;

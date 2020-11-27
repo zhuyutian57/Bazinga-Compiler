@@ -1,6 +1,6 @@
 
-#include "Nonterminal.h"
 #include "Type.h"
+#include "Unit.h"
 
 #ifndef _EXPR_H_
 #define _EXPR_H_
@@ -9,21 +9,23 @@ namespace symbols {
 
 inline namespace nonterminals {
 
-#define ENTRY std::string
-
-class Expr : public Nonterminal {
+class Expr : public Unit {
 
 public:
-  Expr(const ENTRY&, terminals::Type*);
-  Expr(const ENTRY&, terminals::Type*, const TAG&);
-  ~Expr() {}
+  Expr(const ENTRY&, Type*, const TAG&);
+  ~Expr();
 
   const ENTRY& Entry();
-  terminals::Type* Type();
+  Type* GetType();
+  std::set<int>* TrueList();
+  std::set<int>* FalseList();
+  void AddLine(const int, bool);
 
 private:
   ENTRY entry;
-  terminals::Type *type;
+  Type* type;
+  std::set<int>* truelist;
+  std::set<int>* falselist;
 
 }; // class Expr
 

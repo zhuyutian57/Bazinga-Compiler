@@ -9,25 +9,35 @@ UnitSet::UnitSet() {
   Reserve("ID", Tag::ID);
   Reserve("INTEGER", Tag::INTEGER);
   Reserve("FLOAT", Tag::REAL);
-  Reserve('+'); Reserve('-');
-  Reserve('*'); Reserve('/');
-  Reserve(';'); Reserve('=');
-  Reserve('('); Reserve(')');
-  Reserve("$", Tag::END);
-  Reserve("Epsilon", Tag::EPSILON);
+  Reserve("if", Tag::IF);
+  Reserve("else", Tag::ELSE);
+  Reserve("while", Tag::WHILE);
+  Reserve("do", Tag::DO);
+  Reserve("||", Tag::OR); Reserve("&&", Tag::AND);
+  Reserve("<=", Tag::LE); Reserve(">=", Tag::GE);
+  Reserve("==", Tag::EQ); Reserve("!=", Tag::NE);
+  Reserve('+'); Reserve('-'); Reserve('*');
+  Reserve('/'); Reserve(';'); Reserve('=');
+  Reserve('('); Reserve(')'); Reserve('<');
+  Reserve('>'); Reserve('!'); Reserve('$');
+  Reserve("true", Tag::TRUE);
+  Reserve("false", Tag::FALSE);
   // Nonterminals
-  Reserve("Program", Tag::PROGRAM);
-  Reserve("Stmts", Tag::STMTS);
-  Reserve("Stmt", Tag::STMT);
-  Reserve("Expr", Tag::EXPR);
-  Reserve("Term", Tag::TERM);
-  Reserve("Unary", Tag::UNARY);
+  Reserve("Stmts",  Tag::STMTS);
+  Reserve("Stmt",   Tag::STMT);
+  Reserve("Bool",   Tag::BOOL);
+  Reserve("Join",   Tag::JOIN);
+  Reserve("Equal",  Tag::EQUAL);
+  Reserve("Ineq",   Tag::INEQ);
+  Reserve("Arith",  Tag::ARITH);
+  Reserve("Term",   Tag::TERM);
+  Reserve("Unary",  Tag::UNARY);
   Reserve("Factor", Tag::FACTOR);
-  // Tests
-  //Reserve("P", Tag::P);
-  //Reserve("S", Tag::S);
-  //Reserve("L", Tag::L);
-  //Reserve("R", Tag::R);
+  Reserve("Instr",    Tag::INSTR);
+  Reserve("Jump", Tag::JUMP);
+  // Not indexed
+  Reserve("Epsilon", Tag::EPSILON);
+  Reserve("Program", Tag::PROGRAM);
 }
 
 std::string UnitSet::operator[](const int& t) {
@@ -50,7 +60,6 @@ bool UnitSet::IsIndexed(const Unit& unit) {
 void UnitSet::Reserve(const std::string& s, int t) {
    index[t] = units.size();
    units.push_back(Unit(t));
-   if(t >= NONTERMINAL_BEGIN) index[t] -= 2;
    tag_to_str[t] = s;
    str_to_tag[s] = t;
 }

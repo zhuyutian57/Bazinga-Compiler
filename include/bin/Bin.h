@@ -9,6 +9,9 @@
 // symbol
 #define SYMBOL_TABLE std::unordered_map<std::string, Id*>
 #define TYPE_MANAGER std::unordered_map<std::string, Type*>
+// nonterminals
+#define ENTRY std::string
+#define INSTRLIST std::set<int>
 
 // Lexer
 #define DNF_STATE       int
@@ -47,6 +50,8 @@
   for(int i = 0; i < states_size; i++) { \
     delete e_stack.Top(); e_stack.Pop(); \
   }
+#define STATE_IF_AND_IE 72
+#define PRODUCT_JUMP 38
 // Graph
 #define VALTYPE         std::set<int>*
 #define NODESET         std::vector<VALTYPE>

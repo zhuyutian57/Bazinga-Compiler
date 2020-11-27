@@ -1,5 +1,5 @@
 
-#include "Terminal.h"
+#include "Word.h"
 
 #ifndef _TYPE_H_
 #define _TYPE_H_
@@ -8,7 +8,7 @@ namespace symbols {
 
 inline namespace terminals {
 
-class Type : public Terminal {
+class Type : public Word {
 
 public:
   Type(const std::string&, int, int);

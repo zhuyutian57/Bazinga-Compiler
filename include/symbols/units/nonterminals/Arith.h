@@ -1,20 +1,20 @@
 
 #include "Expr.h"
 
-#ifndef _FACTOR_H_
-#define _FACTOR_H_
+#ifndef _Arith_H_
+#define _Arith_H_
 
 namespace symbols {
 
 inline namespace nonterminals {
 
-class Factor : public Expr {
+class Arith : public Expr {
 
 public:
-  Factor(const ENTRY&, Type*);
-  ~Factor() {}
+  Arith(const ENTRY&, Type*);
+  ~Arith() {}
 
-}; // class Factor
+}; // class Arith
 
 } // namespace nonterminals
 

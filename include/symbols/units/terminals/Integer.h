@@ -1,5 +1,5 @@
 
-#include "Terminal.h"
+#include "Word.h"
 
 #ifndef _INTEGER_H_
 #define _INTEGER_H_
@@ -8,7 +8,7 @@ namespace symbols {
 
 inline namespace terminals {
 
-class Integer : public Terminal {
+class Integer : public Word {
 
 public:
   Integer(const std::string&);

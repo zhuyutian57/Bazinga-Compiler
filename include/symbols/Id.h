@@ -14,11 +14,11 @@ public:
   ~Id();
 
   const std::string& Name();
-  terminals::Type* Type();
+  Type* GetType();
 
 private:
   std::string name;
-  terminals::Type *type;
+  Type *type;
 
 }; // class Id
 

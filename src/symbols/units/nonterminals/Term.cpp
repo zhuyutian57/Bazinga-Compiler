@@ -3,5 +3,5 @@
 
 using namespace symbols;
 
-Term::Term(const ENTRY& entry, terminals::Type *type)
+Term::Term(const ENTRY& entry, Type *type)
   : Expr(entry, type, Tag::TERM) {}

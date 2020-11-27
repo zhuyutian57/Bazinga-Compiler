@@ -11,10 +11,8 @@ inline namespace nonterminals {
 class Unary : public Expr {
 
 public:
-  Unary(const ENTRY&, terminals::Type*);
+  Unary(const ENTRY&, Type*);
   ~Unary() {}
-
-private:
 
 }; // class Unary
 

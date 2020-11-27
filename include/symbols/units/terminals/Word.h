@@ -10,19 +10,19 @@ namespace symbols {
 
 inline namespace terminals {
 
-class Terminal : public Unit {
+class Word : public Unit {
 
 public:
-  Terminal(const char&);
-  Terminal(const std::string&, int t);
-  ~Terminal() {}
+  Word(const char&);
+  Word(const std::string&, int t);
+  ~Word() {}
 
   const std::string& Lexeme() const;
 
 private:
   std::string lexeme;
 
-}; // class Terminal
+}; // class Word
 
 } // namespace terminals
 
